@@ -1,0 +1,53 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
+      xmlns:p="tapestry:parameter">
+      
+      
+      <div class="panel">
+      		<div class="panel-heading bg-primary">
+      			<div class="pull-left">
+		      		<div class="btn-group">
+      
+				      	<t:ic-t5.Modal t:event="composeMessage" large="true">
+							<button class="btn btn-default" value=""><span class="glyphicon glyphicon-envelope"></span></button>
+						</t:ic-t5.Modal>
+				      	<t:eventlink t:event="reloadfolders" t:zone="^">
+							<button class="btn btn-default" title="Reload folders from server"><span class="glyphicon glyphicon-refresh" ></span></button>
+						</t:eventlink>
+						<t:ic-t5.Modal t:event="configAccount">
+							<button class="btn btn-default" value=""><span class="glyphicon glyphicon-cog"></span></button>
+						</t:ic-t5.Modal>
+					</div>
+				</div>
+				<div class="clearfix"/>
+			</div>
+			<div class="panel-body">
+				<t:tree t:id="tree" model="foldermodel" value="currentFolder">
+					<p:label>
+						<t:if test="currentFolder.hasChilds" negate="true">
+							<t:eventlink t:event="getFolderContent" t:zone="^" t:context="currentFolder.id">
+								<div id="${currentFolder.id}" class="${folderSelected}">
+									${currentFolder.label}
+								</div>
+							</t:eventlink>
+							<p:else>
+								${currentFolder.label}
+							</p:else>
+						</t:if>
+						<t:if test="hasUnreadMsgs">
+							<span class="label label-default">${currentFolder.unreadmsgs}</span>
+						</t:if>
+					</p:label>
+				</t:tree>
+			</div>
+		</div>
+		
+		
+		<t:block t:id="accountBlock">
+			<t:accountEditor/>
+		</t:block>
+		
+		<t:block t:id="composeBlock">	
+			<t:MailComposer msgId="newMsgId"/>
+		</t:block>
+</html>

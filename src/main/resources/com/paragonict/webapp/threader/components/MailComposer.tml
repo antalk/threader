@@ -1,0 +1,44 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
+	xmlns:p="tapestry:parameter">
+
+
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">
+			<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+		</button>
+		<h4 class="modal-title">Compose Message</h4>
+	</div>
+	<div class="modal-body">
+		<t:zone t:id="maileditzone" id="maileditzone">
+			<t:beaneditform t:id="mailEditor" object="msg" add="content" submitlabel="send"
+				reorder="fromadr,toadr,ccadr,bccadr,subject,content" exclude="account,folder,msgid" t:mixins="ic-t5/bootstrap" zone="^">
+				<p:FromAdr>
+					<label>From</label>
+					<t:textfield value="msg.fromadr" readonly="readonly"/>
+				</p:FromAdr>
+				<p:ToAdr>
+					<label>To</label>
+	      			<t:ic-t5.chosen multiple="true" model="addressbook" value="msg.toadr" createOption="true"/>
+		      	</p:ToAdr>
+				<p:cc>
+					<label>CC</label>
+	      			cc
+	      		</p:cc>
+				<p:bcc>
+					<label>BCC</label>
+	      			bcc
+	      		</p:bcc>
+	      		<p:content>
+	      			<label>Content</label>
+	      			<t:ck.Editor value="content" toolbarSet="Basic" width="100%"/>
+	      		</p:content>
+	
+			</t:beaneditform>
+		</t:zone>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-primary">Save as draft</button>
+	</div>
+
+</html>

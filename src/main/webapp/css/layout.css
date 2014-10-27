@@ -1,0 +1,47 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  
+}
+
+/* Custom page CSS
+-------------------------------------------------- */
+/* Not required for template or sticky footer method. */
+
+body > .container-fluid {
+  padding: 60px 15px 0;
+}
+.container .text-muted {
+  margin: 20px 0;
+}
+
+code {
+  font-size: 80%;
+}
+
+.scrollable {
+    min-height: 300px;
+    overflow-y: auto;
+}
+
+.full-height {
+	height: 70%;
+}
+
+.panel-body {
+	padding: 10px;
+}
+
+.selected {
+	font-weight: bold;
+	display: inline;
+}
+
+.notselected {
+	display: inline;
+}

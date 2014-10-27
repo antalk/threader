@@ -1,0 +1,69 @@
+<html t:type="layout"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+
+<!-- Begin page content -->
+    <div class="container-fluid">
+      <t:delegate to="activeblock"/>
+    </div>
+      
+      <t:block t:id="main">
+      
+      	<div class="well-sm">
+    		<t:alerts/>
+    	</div>
+	      
+   	      <div class="panel">
+			  <div class="col-md-3 scrollable">
+			  	<t:zone t:id="folderzone" id="folderzone">
+			  		<t:Folders/>
+			  	</t:zone>
+			  </div>
+			  <div class="col-md-4 scrollable">
+			  	<t:zone t:id="messageZone" id="messageZone">
+			  		<t:Messages t:id="messages" id="messages"/>
+			  	</t:zone>
+			  </div>
+			  <div class="col-md-5 scrollable">
+			  	<t:zone t:id="contentZone" id="contentZone">
+			  		<t:contents/>
+			  	</t:zone>
+			  </div>
+		</div>
+	</t:block>
+     
+	<t:block t:id="loginblock">
+		<div class="modal fade" id="loginmodal" >
+			  <div class="modal-dialog">
+			    <div class="modal-content">
+			      <div class="modal-header">
+			        <h4 class="modal-title">Login</h4>
+			      </div>
+			      <div class="modal-body">
+			        <p>Login or create an account</p>
+			        	<t:form t:id="loginform" t:mixins="ic-t5/Bootstrap">
+				        	<t:errors/>
+				        	<label>Name</label>
+				        	<t:textfield value="name"/>
+				        	<label>Password</label>
+				        	<t:passwordfield value="password"/>
+				        	<p/>
+				        	<t:submit class="btn btn-primary" value="Login"/>
+				        	&nbsp;
+				        	<button class="btn">
+			        			<t:eventlink t:event="createAccount">Create account</t:eventlink>
+			        		</button>
+			        	</t:form>
+			        	
+			      </div>
+			    </div><!-- /.modal-content -->
+			  </div><!-- /.modal-dialog -->
+			</div><!-- /.modal -->
+			<script>
+				$T5_JQUERY('#loginmodal').modal({
+				  keyboard: false,
+				  backdrop :'static'
+				});
+			</script>
+	</t:block>      
+</html>

@@ -1,0 +1,6 @@
+.svn
+.settings
+.classpath
+.project
+threaddb.*
+/target

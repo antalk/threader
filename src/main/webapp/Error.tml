@@ -1,0 +1,29 @@
+<html t:type="layout"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+      xmlns:p="tapestry:parameter">
+
+	  <modal>
+     	<div class="modal fade" id="exceptionmodal" >
+		  <div class="modal-dialog modal-lg">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h4 class="modal-title">Exception</h4>
+		      </div>
+		      <div class="modal-body">
+		      	${cause}
+		      	<t:if test="productionMode" negate="true">
+		      		<div class="bg-danger">
+		        		<t:exceptiondisplay exception="rootException" />
+		        	</div>
+		        </t:if>
+		      </div>
+		    </div><!-- /.modal-content -->
+		  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+	</modal>
+		<script>
+			$T5_JQUERY('#exceptionmodal').modal({
+			  keyboard: false
+			});
+		</script>
+</html>

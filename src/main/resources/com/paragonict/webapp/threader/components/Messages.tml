@@ -1,0 +1,40 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
+      xmlns:p="tapestry:parameter">
+      
+      <t:if test="folderSelected">
+      	<t:ProgressiveDisplay/>
+      	<p:else>
+      		Select a working folder
+      	</p:else>
+      </t:if>
+      
+      <t:block t:id="messageblock">
+      	<div class="panel">
+      		<div class="panel-heading bg-primary">
+      			<div class="pull-left">
+		      		<div class="btn-group">
+		      			<t:eventlink t:event="reloadmessages" t:zone="^">
+							<button class="btn btn-default" title="Reload messages from server"><span class="glyphicon glyphicon-refresh" ></span></button>
+						</t:eventlink>
+		      		</div>
+		      	</div>
+		      	<div class="clearfix"/>
+		     </div>
+		     <div class="panel-body">
+				  <t:grid t:id="messageGrid" source="messageSource" row="message" exclude="read,msgid" zone="messageZone" reorder="from,subject,sentdate">
+				  	<p:subjectCell>
+				  		<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.msgid">
+				  			<t:if test="message.read">
+				  				${subject}
+				  				<p:else>
+				  					<b>${subject}</b>
+				  				</p:else>
+				  			</t:if>
+				  		</t:eventlink>
+				  	</p:subjectCell>
+				</t:grid>
+			</div>
+		</div>
+	  </t:block>
+</html>
