@@ -136,20 +136,31 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
+                	<outputFileName>threader</outputFileName>
                     <source>1.7</source>
                     <target>1.7</target>
                     <optimize>true</optimize>
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.7.2</version>
-                <configuration>
-                </configuration>
-            </plugin>
-
+             <plugin>
+		        <groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-war-plugin</artifactId>
+		        <configuration>
+			        <outputDirectory>webapps</outputDirectory>
+		        </configuration>
+		        <executions>
+		        	<execution>
+			            <id></id>
+			            <phase>compile</phase>
+			            <goals>
+			              <goal>war</goal>
+			            </goals>
+			            <inherited>false</inherited>
+	                </execution>
+		        </executions>
+		     </plugin>
+		    
             <!-- Run the application using "mvn jetty:run" -->
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
