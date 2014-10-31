@@ -3,6 +3,7 @@
 html {
   position: relative;
   min-height: 100%;
+  font-size: 80%;
 }
 body {
   /* Margin bottom by footer height */

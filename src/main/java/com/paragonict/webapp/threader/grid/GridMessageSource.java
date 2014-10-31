@@ -61,12 +61,12 @@ public class GridMessageSource implements GridDataSource {
 	}
 
 	@Override
-	public Object getRowValue(int index) {
+	public ClientMessage getRowValue(int index) {
 		return preparedResults.get(index);
 	}
 
 	@Override
-	public Class getRowType() {
+	public Class<ClientMessage> getRowType() {
 		return ClientMessage.class;
 	}
 

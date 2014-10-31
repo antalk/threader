@@ -67,7 +67,7 @@ public class Messages {
 	
 	@OnEvent(value=EventConstants.PROGRESSIVE_DISPLAY)
 	private Block loadMessages() throws MessagingException {
-		getMessageSource();
+		//getMessageSource();
 		return resources.getBlock("messageblock");
 	}
 	
