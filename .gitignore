@@ -3,4 +3,5 @@
 .classpath
 .project
 threaddb.*
+threaderdb.lck
 /target
