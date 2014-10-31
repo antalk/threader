@@ -114,7 +114,7 @@ public class MailServiceImpl implements IMailService {
 			f.open(javax.mail.Folder.READ_ONLY);
 			
 			List<Message> fullList = new LinkedList<Message>();
-			final Message[] msgs;
+			Message[] msgs;
 			// differentiate between IMAP and POP3
 			
 			// TODO first figure out if SORT is supported as extension !??
@@ -179,6 +179,7 @@ public class MailServiceImpl implements IMailService {
 				// sort the array
 				Arrays.sort(msgs, mc);
 				fullList = Arrays.asList(msgs);
+				msgs = null;
 				if (negate) {
 					Collections.reverse(fullList);
 				}
@@ -189,14 +190,12 @@ public class MailServiceImpl implements IMailService {
 			System.err.println("FULL LIST LENGTH" +fullList.size());
 			System.err.println("sTART: " +start);
 			System.err.println("END: " +end);
-			
-			
-			fullList = fullList.subList(start, end);
+			fullList = fullList.subList(start, end+1);
 
-			System.err.println("SUBLIST");
+			System.err.println("SUBLIST" + System.currentTimeMillis());
 			// then wrap em into ClientMessages
 			ClientMessage cm;
-			for (Message m: msgs) {
+			for (Message m: fullList) {
 				cm = new ClientMessage();
 				cm.setMsgId(m.getMessageNumber());
 				cm.setFrom(Utils.addressesToString(m.getFrom()));
@@ -209,6 +208,7 @@ public class MailServiceImpl implements IMailService {
 				}
 				clientMsgs.add(cm);
 			}
+			fullList = null;
 			System.err.println("END GET MSGS" + System.currentTimeMillis());
 		}
 		return clientMsgs;
@@ -236,6 +236,7 @@ public class MailServiceImpl implements IMailService {
 
 	/**
      * Return the primary text content of the message.
+     * Copied from the interwebs
      */
 	public String getMessageContent(Part p) throws IOException,MessagingException {
         if (p.isMimeType("text/*")) {

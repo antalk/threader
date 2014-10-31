@@ -43,7 +43,7 @@ Tapestry.Initializer.updateZoneOnEvent = function (eventName, element, zoneId, u
     element = $(element);
     
     if (element == null) {
-    	// element not dom anymore, could be overwritten by other thread/ajax call, skip this.
+    	// element not in dom anymore, could be overwritten by other thread/ajax call, skip this.
     	return;
     }
 
