@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="FileAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<!-- The active file to log to -->
+		<param name="file" value="${catalina.home}/logs/threader-debug.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Threshold" value="DEBUG" />
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- The log message pattern -->
+			<param name="ConversionPattern" value="%5p %d{ISO8601} [%t][%x] %c - %m%n" />
+		</layout>
+	</appender>
+	
+	<appender name="FileErrorAppender" class="org.apache.log4j.DailyRollingFileAppender">
+		<!-- The active file to log to -->
+		<param name="file" value="${catalina.home}/logs/threader-error.log" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd"/>
+		<param name="append" value="true" />
+		<param name="encoding" value="UTF-8" />
+		<param name="Threshold" value="ERROR" />
+
+		<layout class="org.apache.log4j.PatternLayout">
+			<!-- The log message pattern -->
+			<param name="ConversionPattern" value="%5p %d{ISO8601} [%t][%x] %c - %m%n" />
+		</layout>
+	</appender>
+
+	<category name="com.paragonict.webapp.threader">
+    	<priority value="DEBUG"/>
+   	</category>
+
+
+	<category name="org.apache.tapestry5">
+    	<priority value="DEBUG"/>
+   	</category>
+
+	<root>
+		<priority value="INFO"/>
+		<appender-ref ref="FileAppender" />
+		<appender-ref ref="FileErrorAppender" />
+	</root>
+
+</log4j:configuration> 
+    
