@@ -41,7 +41,7 @@
    	</category>
 
 	<root>
-		<priority value="INFO"/>
+		<priority value="DEBUG"/>
 		<appender-ref ref="FileAppender" />
 		<appender-ref ref="FileErrorAppender" />
 	</root>
