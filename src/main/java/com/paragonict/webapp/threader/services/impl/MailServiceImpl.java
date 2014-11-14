@@ -163,7 +163,8 @@ public class MailServiceImpl implements IMailService {
 				msgs = f.getMessages();
 				javax.mail.FetchProfile fp = new javax.mail.FetchProfile();
 				fp.add(FetchProfileItem.ENVELOPE); //from to, cc, bcc, date fields
-				fp.add(FetchProfileItem.FLAGS); //from to, cc, bcc, date fields
+				// cant sort on flags so why retriev?
+				//fp.add(FetchProfileItem.FLAGS); //from to, cc, bcc, date fields
 				f.fetch(msgs, fp);// Load the profile of the messages in 1 fetch. // ffuuu if over 1000 messages!!
 				
 				String sortField;
@@ -191,8 +192,8 @@ public class MailServiceImpl implements IMailService {
 			System.err.println("END: " +end);
 			fullList = fullList.subList(start, end+1);
 
-			System.err.println("SUBLIST" + System.currentTimeMillis());
-			// then wrap em into ClientMessages
+			System.err.println("SUBLIST " + System.currentTimeMillis() + " size:" + fullList.size());
+			// then wrap em into ClientMessages, only now a server round trip for flags is made. but it is only for 25 records.
 			ClientMessage cm;
 			for (Message m: fullList) {
 				cm = new ClientMessage();

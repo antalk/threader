@@ -10,9 +10,11 @@ import javax.mail.Store;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
+import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.services.PerthreadManager;
 import org.apache.tapestry5.ioc.services.ThreadCleanupListener;
 
+import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.entities.Account;
 import com.paragonict.webapp.threader.mail.MailStore;
 import com.paragonict.webapp.threader.services.IAccountService;
@@ -37,6 +39,10 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 	@Inject
 	private IAccountService as;
 	
+	@Inject
+	@Symbol(value=Constants.SYMBOL_MAIL_DEBUG)
+	private boolean debug;
+	
 	@PostInjection
 	public void init(PerthreadManager pm) throws MessagingException {
 		_mailStore = null;
@@ -48,7 +54,8 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 			
 			try {
 				_storesession = Session.getInstance(props);
-				//_storesession.setDebug(true);
+				if (debug)
+					_storesession.setDebug(true);
 			    final Store store = _storesession.getStore(currentAccount.getProtocol().name());
 			    store.connect(currentAccount.getHost(), currentAccount.getEmailAddress(), currentAccount.getPassword());
 			    _mailStore = new MailStore(store);
@@ -87,7 +94,8 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 	        		return new PasswordAuthentication(as.getAccount().getEmailAddress(), as.getAccount().getPassword());
 	        	}
 			});
-	        _smtpsession.setDebug(true);
+	        if (debug)
+	        	_smtpsession.setDebug(true);
 		}
 		return _smtpsession;
 	}

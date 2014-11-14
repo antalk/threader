@@ -1,8 +1,12 @@
 package com.paragonict.webapp.threader.services;
 
+import java.io.IOException;
+import java.util.Properties;
+
 import nl.intercommit.tapestry.SymbolConstants;
 import nl.intercommit.tapestry.services.InterCommitModule;
 
+import org.apache.tapestry5.BindingConstants;
 import org.apache.tapestry5.ComponentParameterConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.ScopeConstants;
@@ -55,5 +59,13 @@ public class ThreaderModule
 		configuration.add(org.apache.tapestry5.SymbolConstants.HMAC_PASSPHRASE, Constants.HMAC_PASSPHRASE);
 		// wtf... zo simple kan het zijn?
 		configuration.add(org.apache.tapestry5.SymbolConstants.EXCEPTION_REPORT_PAGE, "Error");
+		Properties props = new Properties();
+		try {
+			props.load(ThreaderModule.class.getResourceAsStream("/threader.properties"));
+		} catch (IOException e) {
+			System.err.println("Could not load configuration file ! ");
+			e.printStackTrace();
+		}
+		configuration.add(Constants.SYMBOL_MAIL_DEBUG,props.getProperty(Constants.SYMBOL_MAIL_DEBUG, "false"));
     }
 }

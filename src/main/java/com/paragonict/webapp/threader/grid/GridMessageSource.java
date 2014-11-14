@@ -16,6 +16,8 @@ public class GridMessageSource implements GridDataSource {
 	private final String _folder;
 	private List<ClientMessage> preparedResults;
 	
+	private int _startIndex;
+	
 	public GridMessageSource(final IMailService ms,final String folder) {
 		_ms = ms;
 		_folder = folder;
@@ -38,6 +40,8 @@ public class GridMessageSource implements GridDataSource {
 			List<SortConstraint> sortConstraints) {
 		try {
 			
+			_startIndex = startIndex;
+			
 			System.err.println("GRID START MSGS" + System.currentTimeMillis());
 			
 			System.err.println("START" + startIndex );
@@ -50,7 +54,6 @@ public class GridMessageSource implements GridDataSource {
 			}
 			
 			preparedResults = _ms.getMessages(_folder, startIndex, endIndex,sc);
-			
 			System.err.println("GRID END MSGS" + System.currentTimeMillis());
 			
 		} catch (MessagingException e) {
@@ -61,7 +64,7 @@ public class GridMessageSource implements GridDataSource {
 
 	@Override
 	public ClientMessage getRowValue(int index) {
-		return preparedResults.get(index);
+		return preparedResults.get(index-_startIndex);
 	}
 
 	@Override
