@@ -77,8 +77,8 @@ public class AccountEditor {
 	
 	
 	private void validateAccount(final Account acc,final BeanEditForm form) {
-		if (StringUtils.isBlank(acc.getName())) {
-			form.recordError("Name cannot be empty");
+		if (StringUtils.isBlank(acc.getFullName())) {
+			form.recordError("Please enter your full name");
 		}
 		if (StringUtils.isBlank(acc.getEmailAddress())) {
 			form.recordError("Email address cannot be empty");

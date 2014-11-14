@@ -32,16 +32,16 @@
 	</appender>
 
 	<category name="com.paragonict.webapp.threader">
-    	<priority value="DEBUG"/>
+    	<priority value="INFO"/>
    	</category>
 
 
 	<category name="org.apache.tapestry5">
-    	<priority value="DEBUG"/>
+    	<priority value="INFO"/>
    	</category>
 
 	<root>
-		<priority value="DEBUG"/>
+		<priority value="WARN"/>
 		<appender-ref ref="FileAppender" />
 		<appender-ref ref="FileErrorAppender" />
 	</root>

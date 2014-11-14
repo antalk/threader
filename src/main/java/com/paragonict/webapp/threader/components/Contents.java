@@ -6,7 +6,6 @@ import javax.mail.Flags.Flag;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;

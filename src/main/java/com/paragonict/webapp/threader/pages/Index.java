@@ -45,7 +45,7 @@ public class Index extends AppPage {
 	private Form loginForm;
 	
 	@Property
-	private String name;
+	private String mail;
 	
 	@Property
 	private String password;
@@ -57,9 +57,9 @@ public class Index extends AppPage {
 	
 	@OnEvent(component="loginform",value=EventConstants.SUBMIT)
 	private void loginUser() {
-		System.err.println("login with" + name);
+		System.err.println("login with" + mail);
 		
-		Account user = (Account) getHsm().getSession().createCriteria(Account.class).add(Restrictions.eq("name", name)).uniqueResult();
+		Account user = (Account) getHsm().getSession().createCriteria(Account.class).add(Restrictions.eq("emailAddress", mail)).uniqueResult();
 		if (user != null) {
 			getSso().putValue(SESSION_ATTRS.USER_ID, user.getId());
 		} else {

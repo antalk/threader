@@ -7,7 +7,6 @@ import java.io.InputStream;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
-
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.StreamResponse;
 import org.apache.tapestry5.annotations.OnEvent;

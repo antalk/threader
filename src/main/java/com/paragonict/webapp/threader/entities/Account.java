@@ -22,7 +22,7 @@ public class Account extends AbstractIdEntity {
 	private static final long serialVersionUID = -3384482777641553645L;
 	
 	
-	private String name;
+	private String fullName;
 	private String emailAddress;
 	private String host;
 	private PROTOCOL protocol;
@@ -32,11 +32,12 @@ public class Account extends AbstractIdEntity {
 		
 	}
 	
-	public String getName() {
-		return name;
+	
+	public String getFullName() {
+		return fullName;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
 	public String getEmailAddress() {
 		return emailAddress;

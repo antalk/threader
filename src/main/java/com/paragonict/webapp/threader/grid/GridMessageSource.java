@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-
 import org.apache.tapestry5.grid.GridDataSource;
 import org.apache.tapestry5.grid.SortConstraint;
 

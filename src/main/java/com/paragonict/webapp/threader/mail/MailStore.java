@@ -57,20 +57,24 @@ public class MailStore {
 	}
 	
 	
-	public void closeMailStore() throws MessagingException {
-		for (Folder f: requestedFolders) {
-			if (f.isOpen()) {
-				System.out.println("EOR Closing folder :" + f);
-				if (f.getDeletedMessageCount() > 0) {
-					f.close(true);
-				} else {
-					f.close(false);
+	public void closeMailStore() {
+		try {
+			for (Folder f: requestedFolders) {
+				if (f.isOpen()) {
+					System.out.println("EOR Closing folder :" + f);
+					if (f.getDeletedMessageCount() > 0) {
+						f.close(true);
+					} else {
+						f.close(false);
+					}
 				}
 			}
-		}
-		if (_delegate.isConnected()) {
-			System.out.println("EOR Closing session :");
-			_delegate.close();
+			if (_delegate.isConnected()) {
+				System.out.println("EOR Closing session :");
+				_delegate.close();
+			}
+		} catch (MessagingException me) {
+			System.err.println("Error closing mailStore: " + me.getMessage());
 		}
 	}
 	

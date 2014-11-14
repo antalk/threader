@@ -8,7 +8,6 @@ import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
 
-
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
 import org.apache.tapestry5.ioc.services.PerthreadManager;
@@ -51,7 +50,7 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 				_storesession = Session.getInstance(props);
 				//_storesession.setDebug(true);
 			    final Store store = _storesession.getStore(currentAccount.getProtocol().name());
-			    store.connect(currentAccount.getHost(), currentAccount.getName(), currentAccount.getPassword());
+			    store.connect(currentAccount.getHost(), currentAccount.getEmailAddress(), currentAccount.getPassword());
 			    _mailStore = new MailStore(store);
 			    pm.addThreadCleanupListener(this);
 			} catch (Exception e) {
@@ -85,24 +84,17 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 	        _smtpsession = Session.getInstance(props,new Authenticator() {
 	        	@Override
 	        	protected PasswordAuthentication getPasswordAuthentication() {
-	        		return new PasswordAuthentication(as.getAccount().getName(), as.getAccount().getPassword());
+	        		return new PasswordAuthentication(as.getAccount().getEmailAddress(), as.getAccount().getPassword());
 	        	}
 			});
 	        _smtpsession.setDebug(true);
-	        
-	        
 		}
 		return _smtpsession;
 	}
 	
 	public void threadDidCleanup() {
 		if (_mailStore !=null) {
-			try {
-				_mailStore.closeMailStore();
-				
-			} catch (MessagingException e) {
-				System.err.println("Could not close active mailstore!" + e);
-			}
+			_mailStore.closeMailStore();
 			_storesession = null;
 			_smtpsession = null;
 		}

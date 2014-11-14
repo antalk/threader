@@ -56,34 +56,4 @@ public class ThreaderModule
 		// wtf... zo simple kan het zijn?
 		configuration.add(org.apache.tapestry5.SymbolConstants.EXCEPTION_REPORT_PAGE, "Error");
     }
- 
-    /*
-    public RequestExceptionHandler buildAppRequestExceptionHandler(
-            final Logger logger,
-            final PageResponseRenderer renderer,
-            final RequestPageCache rpc)
-    {
-        return new RequestExceptionHandler()
-        {
-            public void handleRequestException(Throwable exception) throws IOException
-            {
-            	
-                logger.error("Unexpected runtime exception: " + exception.getMessage(), exception);
-                
-                Page page = rpc.get("Error");
-                ExceptionReporter index = (ExceptionReporter) page.getRootComponent();
-                index.reportException(exception);
-                renderer.renderPageResponse(page);
-            }
-        };
-    }
-     
-    public void contributeServiceOverride(
-            MappedConfiguration<Class, Object> configuration,
-     
-            @Local
-            RequestExceptionHandler handler)
-    {
-        configuration.add(RequestExceptionHandler.class, handler);
-    }*/
 }

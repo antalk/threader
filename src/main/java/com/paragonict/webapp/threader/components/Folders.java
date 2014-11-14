@@ -1,11 +1,12 @@
 package com.paragonict.webapp.threader.components;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.mail.MessagingException;
-
+import javax.mail.internet.InternetAddress;
 
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentResources;
@@ -73,10 +74,10 @@ public class Folders {
 	}
 	
 	@OnEvent(value="composeMessage")
-	private Block getMessageEditor() {
+	private Block getMessageEditor() throws UnsupportedEncodingException {
 		final Message newMessage = new Message();
 		newMessage.setAccount(as.getAccount().getId());
-		newMessage.setFromAdr(as.getAccount().getEmailAddress());
+		newMessage.setFromAdr(new InternetAddress(as.getAccount().getEmailAddress(),as.getAccount().getFullName()).toString());
 		
 		hsm.getSession().saveOrUpdate(newMessage);
 		hsm.commit();

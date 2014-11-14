@@ -13,7 +13,6 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 
-
 import org.apache.tapestry5.grid.ColumnSort;
 import org.apache.tapestry5.grid.SortConstraint;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;

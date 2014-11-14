@@ -7,7 +7,6 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 
-
 import org.apache.tapestry5.grid.SortConstraint;
 
 import com.paragonict.webapp.threader.beans.ClientMessage;

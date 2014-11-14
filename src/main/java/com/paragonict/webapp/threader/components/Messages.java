@@ -2,7 +2,6 @@ package com.paragonict.webapp.threader.components;
 
 import javax.mail.MessagingException;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;

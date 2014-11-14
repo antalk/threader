@@ -9,7 +9,6 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage.RecipientType;
 
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
