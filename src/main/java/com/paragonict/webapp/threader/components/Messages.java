@@ -21,12 +21,14 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.BeanModelSource;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 
+import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.grid.GridMessageSource;
 import com.paragonict.webapp.threader.services.IMailService;
 
+@RequiresLogin
 public class Messages {
 	
 	@SessionState

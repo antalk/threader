@@ -15,11 +15,14 @@ import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
+import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
 
+@RequiresLogin
 public class Contents {
 
 	@SessionState
@@ -44,7 +47,7 @@ public class Contents {
 	
 	
 	@Cached
-	public Message getMessage()  throws MessagingException {
+	public ClientMessage getMessage()  throws MessagingException {
 		if (getMessageSelected()) {
 			return ms.getMessage((String)sso.getValue(SESSION_ATTRS.SELECTED_FOLDER), (Integer)sso.getValue(SESSION_ATTRS.SELECTED_MSG_ID));
 		}
@@ -59,13 +62,13 @@ public class Contents {
 	
 	@OnEvent(value="markasunread")
 	private Block markMessageAsUnread() throws MessagingException {
-		getMessage().setFlag(Flag.SEEN,false);
+		//().setFlag(Flag.SEEN,false);
 		return resources.getBlock("contentblock");
 	}
 	
 	@OnEvent(value="deletemessage")
 	private void deleteMessage() throws MessagingException {
-		getMessage().setFlag(Flag.DELETED,true);
+		//getMessage().setFlag(Flag.DELETED,true);
 		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
 		resources.triggerEvent("reloadContent", new Object[]{}, null);
 	}
@@ -91,7 +94,7 @@ public class Contents {
 	}
 	
 	public boolean getMessageRead() throws MessagingException {
-		return getMessage().getFlags().contains(Flag.SEEN);
+		return getMessage().isRead();
 	}
 	
 	

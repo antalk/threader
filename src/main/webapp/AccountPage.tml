@@ -3,11 +3,8 @@
       xmlns:p="tapestry:parameter">
 
 <!-- Begin page content -->
-    <div class="container">
-      <div class="page-header">
-        <h1>Account</h1>
-      </div>
-      
+    <div class="container-fluid">
+      <h1>Account</h1>
       <t:accountEditor/>
 	</div>      
 

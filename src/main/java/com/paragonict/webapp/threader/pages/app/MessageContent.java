@@ -1,4 +1,4 @@
-package com.paragonict.webapp.threader.pages.internal;
+package com.paragonict.webapp.threader.pages.app;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,17 +13,19 @@ import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.Response;
+import org.apache.tapestry5.util.TextStreamResponse;
 
+import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.services.IMailService;
 
+@RequiresLogin
 public class MessageContent {
-	
+	/*
 	@SessionState
 	private SessionStateObject sso;
 	
-
 	@Inject
 	private IMailService ms;
 	
@@ -39,7 +41,6 @@ public class MessageContent {
 				
 				@Override
 				public void prepareResponse(Response response) {
-					// TODO Auto-generated method stub
 					
 				}
 				
@@ -54,10 +55,17 @@ public class MessageContent {
 				
 				@Override
 				public String getContentType() {
+					try {
+						if (m.isMimeType("text/plain")) {
+							return "text/plain";
+						}
+					} catch (MessagingException e) {
+						e.printStackTrace();
+					}
 					return "text/html";
 				}
 			};
 		}
-		return com.paragonict.webapp.threader.pages.Index.class;
-	}
+		return new TextStreamResponse("text/plain", "No message selected");
+	}*/
 }

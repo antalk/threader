@@ -22,7 +22,7 @@
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li class="active"><t:pagelink t:page="index">Home</t:pagelink></li>
-            <li><a href="#about">About</a></li>
+            <li><t:pagelink t:page="app/contacts">Contacts</t:pagelink></li>
           </ul>
             <ul class="nav navbar-nav navbar-right">
              <li class="dropdown">
@@ -30,7 +30,7 @@
 	             <ul class="dropdown-menu" role="menu">
 	               <li><t:pagelink t:page="accountpage">Settings</t:pagelink></li>
 	               <li class="divider"></li>
-	               <li><t:eventlink t:event="logout">Logout</t:eventlink></li>
+	               <li class="${logoutenabled}"><t:eventlink t:event="logout">Logout</t:eventlink></li>
 	             </ul>
 	            </li>
 	         </ul>

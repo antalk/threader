@@ -8,7 +8,7 @@ import com.paragonict.webapp.threader.mail.MailStore;
 
 public interface IMailSession {
 	
-	Session getSMTPSession();
+	Session getSession();
 		
 	MailStore getStore() throws MessagingException;
 }

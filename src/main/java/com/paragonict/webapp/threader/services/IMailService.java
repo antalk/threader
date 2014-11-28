@@ -21,7 +21,15 @@ public interface IMailService {
 	
 	public Integer getNrOfMessages(final String folder) throws MessagingException;
 	
-	public Message getMessage(final String folder, final Integer msgId) throws MessagingException;
+	/**
+	 * Gets the complete message, incl. content as a client side object and provides caching
+	 * 
+	 * @param folder
+	 * @param msgId
+	 * @return
+	 * @throws MessagingException
+	 */
+	public ClientMessage getMessage(final String folder, final Integer msgId) throws MessagingException;
 	
-	public String getMessageContent(final Part p) throws IOException, MessagingException;
+	//public String getMessageContent(final Part p) throws IOException, MessagingException;
 }

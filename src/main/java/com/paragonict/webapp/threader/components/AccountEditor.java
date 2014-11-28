@@ -1,19 +1,26 @@
 package com.paragonict.webapp.threader.components;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tapestry5.ComponentEventCallback;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
+import org.apache.tapestry5.SelectModel;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.OnEvent;
-import org.apache.tapestry5.corelib.components.BeanEditForm;
+import org.apache.tapestry5.annotations.Property;
+import org.apache.tapestry5.corelib.components.Form;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
+import org.apache.tapestry5.internal.TapestryInternalUtils;
 import org.apache.tapestry5.internal.util.Holder;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
 import com.paragonict.webapp.threader.entities.Account;
+import com.paragonict.webapp.threader.entities.Account.PROTOCOL;
 import com.paragonict.webapp.threader.services.IAccountService;
 
 public class AccountEditor {
@@ -28,42 +35,62 @@ public class AccountEditor {
 	private ComponentResources cr;
 	
 	@Component
-	private BeanEditForm accountcreate;
-
-	@Component
-	private BeanEditForm accountedit;
-
+	private Form accountedit;
+	
+	@Property
+	private String protocol;
 	
 	// already loggedin
 	@Cached
 	public Account getAccount() {
-		return as.getAccount();
-	}
-	
-	@Cached
-	public Account getNewAccount() {
-		Account account = new Account();
-		return account;
+		if (as.isLoggedIn()) {
+			protocol = as.getAccount().getProtocol().name();
+			return as.getAccount();
+		}
+		Account newAccount = new Account();
+		protocol = PROTOCOL.pop3.name();
+		return newAccount;
 	}
 	
 	public boolean getIsLoggedIn() {
 		return as.isLoggedIn();
 	}
 	
-	@OnEvent(component="accountedit",value=EventConstants.VALIDATE)
-	private void validateExistingAccount() {
-		validateAccount(getAccount(), accountedit);
+	@Cached
+	public SelectModel getProtocolModel() {
+		List<String> protocols = new ArrayList<String>();
+		for (PROTOCOL p: PROTOCOL.values()) {
+			protocols.add(p.name());
+		}
+		return TapestryInternalUtils.toSelectModel(protocols);
 	}
 	
 	
+	
+	@OnEvent(component="accountedit",value=EventConstants.VALIDATE)
+	private void validateExistingAccount() {
+		validateAccount();
+	}
+	
+	@OnEvent(component="accountedit",value=EventConstants.SUCCESS)
+	private Object updateAccount() {
+		if (as.isLoggedIn()) {
+			hsm.getSession().saveOrUpdate(getAccount());
+		} else {
+			hsm.getSession().save(getAccount());
+		}
+		hsm.commit();
+		return throwSuccesEvent();
+	}
+	
+	
+	/*
 	@OnEvent(component="accountcreate",value=EventConstants.VALIDATE)
 	private void validateNewAccount() {
 		validateAccount(getNewAccount(), accountcreate);
 	}
 	
-	@OnEvent(component="accountedit",value=EventConstants.SUCCESS)
-	private Object updateAccount() {
-		hsm.getSession().saveOrUpdate(getAccount());
+		
 		hsm.commit();
 		return throwSuccesEvent();
 	}
@@ -74,23 +101,32 @@ public class AccountEditor {
 		hsm.commit();
 		return throwSuccesEvent();
 	}
+	*/
 	
-	
-	private void validateAccount(final Account acc,final BeanEditForm form) {
-		if (StringUtils.isBlank(acc.getFullName())) {
-			form.recordError("Please enter your full name");
+	private void validateAccount() {
+		if (StringUtils.isBlank(getAccount().getFullName())) {
+			accountedit.recordError("Please enter your full name");
 		}
-		if (StringUtils.isBlank(acc.getEmailAddress())) {
-			form.recordError("Email address cannot be empty");
+		if (StringUtils.isBlank(getAccount().getEmailAddress())) {
+			accountedit.recordError("Email address cannot be empty");
 		}
-		if (StringUtils.isBlank(acc.getHost())) {
-			form.recordError("Host cannot be empty");
+		if (StringUtils.isBlank(getAccount().getAccountName())) {
+			accountedit.recordError("Account name cannot be empty");
 		}
-		if (StringUtils.isBlank(acc.getPassword())) {
-			form.recordError("Password cannot be empty");
+		if (StringUtils.isBlank(getAccount().getHost())) {
+			accountedit.recordError("Host cannot be empty");
 		}
-		if (acc.getProtocol()==null) {
-			form.recordError("Protocol cannot be empty");
+		if (getAccount().getProtocol()==null) {
+			accountedit.recordError("Protocol cannot be empty");
+		}
+		if (StringUtils.isBlank(getAccount().getPassword())) {
+			accountedit.recordError("Password cannot be empty");
+		}
+		if (StringUtils.isBlank(getAccount().getSmtpHost())) {
+			accountedit.recordError("SMTP Host cannot be empty");
+		}
+		if (getAccount().getSmtpPort() == null) {
+			accountedit.recordError("Specify an smtp port");
 		}
 	}
 	

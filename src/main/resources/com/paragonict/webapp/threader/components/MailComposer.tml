@@ -19,7 +19,7 @@
 				</p:FromAdr>
 				<p:ToAdr>
 					<label>To</label>
-	      			<t:ic-t5.chosen multiple="true" model="addressbook" value="msg.toadr" createOption="true"/>
+					<t:ic-t5.chosen t:id="addressselect" id="addressselect" multiple="true" model="addressbook" value="msg.toadr" createOption="true" fireChangeEvent="true"/>
 		      	</p:ToAdr>
 				<p:cc>
 					<label>CC</label>

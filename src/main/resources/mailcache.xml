@@ -1,0 +1,12 @@
+<ehcache> 
+  <diskStore path="java.io.tmpdir"/> 
+  <cache name="mailmessages"
+    		eternal="false"
+           maxElementsOnDisk="0"
+           maxElementsInMemory="25"
+           timeToIdleSeconds="1800"
+           timeToLiveSeconds="1800"
+           overflowToDisk="false" 
+            memoryStoreEvictionPolicy="LRU"
+            />
+</ehcache>

@@ -33,8 +33,7 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 	// the store for the current user
 	private MailStore _mailStore;
 	
-	private Session _storesession; // a session to connecto to the store to retrieve mail
-	private Session _smtpsession; // a session to send mail
+	private Session _mailsession; // a session to connecto to the store to retrieve mail
 		
 	@Inject
 	private IAccountService as;
@@ -53,16 +52,21 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 			setProperties(props);
 			
 			try {
-				_storesession = Session.getInstance(props);
+				_mailsession =  Session.getInstance(props,new Authenticator() {
+		        	@Override
+		        	protected PasswordAuthentication getPasswordAuthentication() {
+		        		return new PasswordAuthentication(as.getAccount().getEmailAddress(), as.getAccount().getPassword());
+		        	}
+				});
 				if (debug)
-					_storesession.setDebug(true);
-			    final Store store = _storesession.getStore(currentAccount.getProtocol().name());
-			    store.connect(currentAccount.getHost(), currentAccount.getEmailAddress(), currentAccount.getPassword());
+					_mailsession.setDebug(true);
+			    final Store store = _mailsession.getStore(currentAccount.getProtocol().name());
+			    store.connect(); 
 			    _mailStore = new MailStore(store);
 			    pm.addThreadCleanupListener(this);
 			} catch (Exception e) {
 				_mailStore = null;
-				_storesession = null;
+				_mailsession = null;
 				throw new MessagingException("Could not connect to mailstore for current user due to :" + e.getMessage());
 			}
 		}
@@ -77,58 +81,45 @@ public class MailSessionImpl implements IMailSession, ThreadCleanupListener{
 	}
 	
 	@Override
-	public Session getSMTPSession() {
-		// TODO: make configurable
-		if (_smtpsession == null) {
-		
-			Properties props = new Properties();
-			props.put("mail.transport.protocol","smtp"); 
-	        props.put("mail.smtp.auth", "true");
-	        //props.put("mail.smtp.starttls.enable", "true");
-	        props.put("mail.smtp.host", as.getAccount().getHost());
-	        props.put("mail.smtp.debug", "true");
-	        props.put("mail.smtp.port", "25");
-	        _smtpsession = Session.getInstance(props,new Authenticator() {
-	        	@Override
-	        	protected PasswordAuthentication getPasswordAuthentication() {
-	        		return new PasswordAuthentication(as.getAccount().getEmailAddress(), as.getAccount().getPassword());
-	        	}
-			});
-	        if (debug)
-	        	_smtpsession.setDebug(true);
-		}
-		return _smtpsession;
+	public Session getSession() {
+		return _mailsession;
 	}
 	
 	public void threadDidCleanup() {
 		if (_mailStore !=null) {
 			_mailStore.closeMailStore();
-			_storesession = null;
-			_smtpsession = null;
+			_mailsession = null;
 		}
 
 	}
 	
 	private void setProperties(final Properties props) {
-		switch (as.getAccount().getProtocol()) {
-		case imap:
-			props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-			break;
-		case imaps:
-			props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-			props.setProperty("mail.imap.starttls.enable", "true");
-		    props.setProperty("mail.imap.ssl.enable", "true");
-			break;
-		case pop3:
-			props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-			break;
-		case pops:
-			props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-			break;
-		default:
-			break;
-			
 		
+		props.put("mail.transport.protocol","smtp"); 
+		props.put("mail.smtp.auth", as.getAccount().getSmtpAuth().toString());
+		props.put("mail.smtp.host", as.getAccount().getSmtpHost());
+		props.put("mail.smtp.port", as.getAccount().getSmtpPort());
+		props.put("mail.smtp.starttls.enable", as.getAccount().getSmtpTLS().toString());
+		
+		props.put("mail."+as.getAccount().getProtocol().name()+".host", as.getAccount().getHost());
+		
+		switch (as.getAccount().getProtocol()) {
+			case imap:
+				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
+				break;
+			case imaps:
+				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
+				props.setProperty("mail.imap.starttls.enable", "true");
+			    props.setProperty("mail.imap.ssl.enable", "true");
+				break;
+			case pop3:
+				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
+				break;
+			case pops:
+				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
+				break;
+			default:
+				break;
 		}
 	}
 

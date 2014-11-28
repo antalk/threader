@@ -2,12 +2,90 @@
       xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
       xmlns:p="tapestry:parameter">
       
-      <t:if test="isloggedin">
-      	Edit account
-     	<t:beaneditform t:id="accountedit" object="account" t:mixins="ic-t5/Bootstrap" exclude="id"/>
-     	<p:else>
-     		Create new account
-     		<t:beaneditform t:id="accountcreate" object="newaccount" t:mixins="ic-t5/Bootstrap" exclude="id"/>
-     	</p:else>
-     </t:if>
+      <div id="rootwizard" style="width: 60%">
+			<div class="navbar">
+			  <div class="navbar-inner">
+			    <div class="container">
+			<ul>
+			  	<li><a href="#tab1" data-toggle="tab">Account</a></li>
+				<li><a href="#tab2" data-toggle="tab">Incoming</a></li>
+				<li><a href="#tab3" data-toggle="tab">Outgoing</a></li>
+				<li><a href="#tab4" data-toggle="tab">Advanced</a></li>
+			</ul>
+			 </div>
+			  </div>
+			</div>
+			<div class="progress">
+				<div id="bar" class="progress-bar" role="progressbar" >
+				</div>
+			</div>
+			<t:form t:id="accountEdit">
+				<t:errors class="literal:bg-danger"/>
+				<div class="tab-content" >
+				    <div class="tab-pane" id="tab1" style="width: 60%">
+				    	<div class="form-group">
+    						<label for="name">Fullname</label>
+    						<t:textfield t:value="account.fullname" class="form-control" id="name" placeholder="Enter your full name"/>
+  						</div>
+				      	<div class="form-group">
+    						<label for="emailaddress">Email address</label>
+    						<t:textfield t:value="account.emailaddress" type="email" class="form-control" id="emailaddress" placeholder="Enter email"/>
+  						</div>
+  						<div class="form-group">
+    						<label for="accountname">Account name</label>
+    						<t:textfield t:value="account.accountname" class="form-control" id="accountname" placeholder="Enter the account you use to login to the mail server"/>
+  						</div>
+				    </div>
+				    <div class="tab-pane" id="tab2" style="width: 60%">
+				      	<div class="form-group">
+    						<label for="host">Incoming host</label>
+    						<t:textfield t:value="account.host" class="form-control" id="host" placeholder="Enter ip adres or hostname"/>
+  						</div>
+  						<div class="form-group">
+    						<label for="protocol">Protocol</label>
+    						<t:select t:model="protocolModel" t:value="protocol" class="form-control" id="protocol" />
+  						</div>
+  						<div class="form-group">
+    						<label for="password">Password</label>
+    						<t:textfield t:value="account.password" type="password" class="form-control" id="password" />
+  						</div>
+				    </div>
+					<div class="tab-pane" id="tab3" style="width: 60%">
+						<div class="form-group">
+    						<label for="smtphost">Outgoing host</label>
+    						<t:textfield t:value="account.smtphost" class="form-control" id="smtphost" placeholder="Enter ip adres or hostname"/>
+  						</div>
+						<div class="form-group">
+    						<label for="smtpport">Outgoing port</label>
+    						<t:textfield t:value="account.smtpport" class="form-control" id="smtpport" placeholder="Enter port number"/>
+  						</div>
+  						 <div class="checkbox">
+    						<label for="smtpauth">
+    							<t:checkbox t:value="account.smtpAuth" id="smtpauth"/>
+    							Authenticate
+    						</label>
+  						</div>
+  						 <div class="checkbox">
+    						<label for="smtptls">
+    							<t:checkbox t:value="account.smtpTLS" id="smtptls"/>
+    							TLS
+    						</label>
+  						</div>
+  						
+				    </div>
+					<div class="tab-pane" id="tab4" style="width: 60%">
+						Noting here yet..
+				    </div>
+					<ul class="pager wizard">
+						<li class="previous"><a href="#">Previous</a></li>
+						<li id="submits" class="pull-right">
+					  		&nbsp;
+							 <t:submit class="btn btn-primary" t:id="submit" value="Save / Update"/>
+						</li>
+					  	<li class="next"><a href="#">Next</a></li>
+					</ul>
+				</div>
+				
+		</t:form>	
+		</div>
 </html>

@@ -2,6 +2,7 @@ package com.paragonict.webapp.threader.base;
 
 
 import org.apache.tapestry5.ioc.annotations.Inject;
+import org.apache.tapestry5.services.Request;
 
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.pages.Index;
@@ -11,6 +12,9 @@ public abstract class AppPage extends BasicPage {
 	
 	@Inject
 	private IAccountService as;
+	
+	@Inject
+	private Request req;
 	
 	public Object onActivate() {
 		if (getSso().getValue(SESSION_ATTRS.USER_ID) == null) {

@@ -1,5 +1,6 @@
 package com.paragonict.webapp.threader.beans;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.mail.Message;
@@ -10,13 +11,20 @@ import javax.mail.Message;
  * @author avankalleveen
  *
  */
-public class ClientMessage {
+public class ClientMessage implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3317865513040961960L;
+	
 	private Integer msgId;
 	private String from;
 	private String subject;
 	private Date sentDate;
 	private boolean read;
+	private String content;
+	private String contentType;
 	
 	public Integer getMsgId() {
 		return msgId;
@@ -47,6 +55,18 @@ public class ClientMessage {
 	}
 	public void setRead(boolean read) {
 		this.read = read;
+	}
+	public String getContent() {
+		return content;
+	}
+	public void setContent(String content) {
+		this.content = content;
+	}
+	public String getContentType() {
+		return contentType;
+	}
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 	
 	

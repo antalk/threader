@@ -42,11 +42,14 @@
 				<div class="clearfix"/>
 			</div>
 			<div class="panel-body">
-      			<t:beandisplay object="message" include="subject"/>
+      			<t:beandisplay object="message" include="subject" exclude="content"/>
       		</div>
       	</div>
 	   	<div class="full-height">
-		   	<iframe src="internal/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
+	   		<t:outputraw value="message.content"/>
+	   	<!-- 
+		   	<iframe src="app/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
+		   	 -->
 		</div>
 	   	<p:else>
 	   		Message does not exist
@@ -60,7 +63,7 @@
 	        <t:beandisplay object="message" include="subject" t:mixins="ic-t5/bootstrap"/>
 	      </div>
 	      <div class="modal-body full-height">
-			<iframe src="internal/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
+			<iframe src="app/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
 	      </div>
 	 </t:block>
 	 

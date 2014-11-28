@@ -6,17 +6,23 @@ import java.util.Properties;
 import nl.intercommit.tapestry.SymbolConstants;
 import nl.intercommit.tapestry.services.InterCommitModule;
 
-import org.apache.tapestry5.BindingConstants;
 import org.apache.tapestry5.ComponentParameterConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
+import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ScopeConstants;
 import org.apache.tapestry5.ioc.ServiceBinder;
+import org.apache.tapestry5.ioc.annotations.Startup;
 import org.apache.tapestry5.ioc.annotations.SubModule;
+import org.apache.tapestry5.services.ComponentRequestFilter;
+import org.apache.tapestry5.services.javascript.JavaScriptStack;
 
 import com.paragonict.webapp.threader.Constants;
+import com.paragonict.webapp.threader.services.filter.RequiresLoginFilter;
 import com.paragonict.webapp.threader.services.impl.AccountServiceImpl;
+import com.paragonict.webapp.threader.services.impl.MailCacheManager;
 import com.paragonict.webapp.threader.services.impl.MailServiceImpl;
 import com.paragonict.webapp.threader.services.impl.MailSessionImpl;
+import com.paragonict.webapp.threader.services.internal.WizardScriptStack;
 
 /**
  * This module is automatically included as part of the Tapestry IoC Registry, it's a good place to
@@ -28,6 +34,7 @@ public class ThreaderModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(IMailService.class,MailServiceImpl.class);
+        binder.bind(IMailCache.class,MailCacheManager.class);
         binder.bind(IMailSession.class,MailSessionImpl.class).scope(ScopeConstants.PERTHREAD);
         binder.bind(IAccountService.class,AccountServiceImpl.class).scope(ScopeConstants.PERTHREAD);
     }
@@ -68,4 +75,29 @@ public class ThreaderModule
 		}
 		configuration.add(Constants.SYMBOL_MAIL_DEBUG,props.getProperty(Constants.SYMBOL_MAIL_DEBUG, "false"));
     }
+    
+    public static void contributeComponentRequestHandler(OrderedConfiguration<ComponentRequestFilter> configuration) {
+        configuration.addInstance("RequiresLogin", RequiresLoginFilter.class);
+    }
+    
+    public static void contributeJavaScriptStackSource(MappedConfiguration<String, JavaScriptStack> configuration) {
+    	configuration.addInstance("Wizard", WizardScriptStack.class);
+    }
+    
+    /*
+    public static void contributeTypeCoercer(Configuration<CoercionTuple> configuration) {
+        Coercion<Account.PROTOCOL, String> coercion = new Coercion<Account.PROTOCOL, String>() {
+	
+        	public String coerce(PROTOCOL input) {
+               return input.name();
+            }
+        };
+      
+        configuration.add(new CoercionTuple<Account.PROTOCOL, String>(Account.PROTOCOL.class, String.class, coercion));    
+    }*/
+    @Startup
+    public void doAfterStart() {
+    	
+    }
+    
 }

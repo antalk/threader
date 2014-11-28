@@ -22,7 +22,7 @@
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
-				  <t:grid t:id="messageGrid" source="messageSource" row="message" exclude="read,msgid" zone="messageZone" reorder="from,subject,sentdate" >
+				  <t:grid t:id="messageGrid" source="messageSource" row="message" exclude="read,msgid,content,contenttype" zone="messageZone" reorder="from,subject,sentdate" >
 				  	<p:subjectCell>
 				  		<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.msgid">
 				  			<t:if test="message.read">

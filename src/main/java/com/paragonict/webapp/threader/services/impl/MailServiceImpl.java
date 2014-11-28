@@ -23,11 +23,17 @@ import com.paragonict.webapp.threader.Utils;
 import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.entities.Folder;
 import com.paragonict.webapp.threader.services.IAccountService;
+import com.paragonict.webapp.threader.services.IMailCache;
 import com.paragonict.webapp.threader.services.IMailService;
 import com.paragonict.webapp.threader.services.IMailSession;
 import com.sun.mail.imap.IMAPFolder.FetchProfileItem;
 import com.sun.mail.imap.IMAPMessage;
 
+/*
+ * TODO: Wrap IMailCache into THIS
+ * 
+ * 
+ */
 public class MailServiceImpl implements IMailService {
 	
 	@Inject
@@ -35,6 +41,9 @@ public class MailServiceImpl implements IMailService {
 	
 	@Inject
 	private IMailSession mailSession;
+	
+	@Inject
+	private IMailCache cache;
 	
 	@Inject
 	private IAccountService as;
@@ -196,17 +205,17 @@ public class MailServiceImpl implements IMailService {
 			// then wrap em into ClientMessages, only now a server round trip for flags is made. but it is only for 25 records.
 			ClientMessage cm;
 			for (Message m: fullList) {
-				cm = new ClientMessage();
-				cm.setMsgId(m.getMessageNumber());
-				cm.setFrom(Utils.addressesToString(m.getFrom()));
-				cm.setSubject(m.getSubject());
-				cm.setSentDate(m.getSentDate());
-				if (m instanceof IMAPMessage) {
-					cm.setRead(m.getFlags().contains(Flag.SEEN));
-				} else {
-					cm.setRead(true);
+				
+				// then lookup UID of this message
+				String UID = "";
+				
+				if (f instanceof com.sun.mail.pop3.POP3Folder) {
+				    com.sun.mail.pop3.POP3Folder pf = (com.sun.mail.pop3.POP3Folder)f;
+				    UID = pf.getUID(m);
+				} else if (f instanceof com.sun.mail.imap.IMAPFolder) {
+					UID = ""+((com.sun.mail.imap.IMAPFolder) f).getUID(m);
 				}
-				clientMsgs.add(cm);
+				clientMsgs.add(cache.getMessage(UID, m));
 			}
 			fullList = null;
 			System.err.println("END GET MSGS" + System.currentTimeMillis());
@@ -225,55 +234,29 @@ public class MailServiceImpl implements IMailService {
 		return 0;
 	}
 	
-	public Message getMessage(final String folder, final Integer id) throws MessagingException {
+	public ClientMessage getMessage(final String folder, final Integer id) throws MessagingException {
 		if (id != null && folder != null) {
 			javax.mail.Folder f = mailSession.getStore().getFolder(folder);
-			f.open(javax.mail.Folder.READ_WRITE); // read/write so we can mark it as read or deleted!
-		    return f.getMessage(id);
+			f.open(javax.mail.Folder.READ_ONLY);
+			
+			// is this fast?
+			final Message msg = f.getMessage(id);
+			// then lookup UID of this message
+			
+			String UID = "";
+			
+			if (f instanceof com.sun.mail.pop3.POP3Folder) {
+			    com.sun.mail.pop3.POP3Folder pf = (com.sun.mail.pop3.POP3Folder)f;
+			    UID = pf.getUID(msg);
+			} else if (f instanceof com.sun.mail.imap.IMAPFolder) {
+				UID = ""+((com.sun.mail.imap.IMAPFolder) f).getUID(msg);
+			}
+			return cache.getMessage(UID, msg);
 		}
 		return null;
 	}
 
-	/**
-     * Return the primary text content of the message.
-     * Copied from the interwebs
-     */
-	public String getMessageContent(Part p) throws IOException,MessagingException {
-        if (p.isMimeType("text/*")) {
-            String s = (String)p.getContent();
-            //textIsHtml = p.isMimeType("text/html");
-            return s;
-        }
-
-        if (p.isMimeType("multipart/alternative")) {
-            // prefer html text over plain text
-            Multipart mp = (Multipart)p.getContent();
-            String text = null;
-            for (int i = 0; i < mp.getCount(); i++) {
-                Part bp = mp.getBodyPart(i);
-                if (bp.isMimeType("text/plain")) {
-                    if (text == null)
-                        text = getMessageContent(bp);
-                    continue;
-                } else if (bp.isMimeType("text/html")) {
-                    String s = getMessageContent(bp);
-                    if (s != null)
-                        return s;
-                } else {
-                    return getMessageContent(bp);
-                }
-            }
-            return text;
-        } else if (p.isMimeType("multipart/*")) {
-            Multipart mp = (Multipart)p.getContent();
-            for (int i = 0; i < mp.getCount(); i++) {
-                String s = getMessageContent(mp.getBodyPart(i));
-                if (s != null)
-                    return s;
-            }
-        }
-        return null;
-    }
+	
 
 	private class MessageComparator implements Comparator<Message> {
 		

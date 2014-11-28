@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentResources;
@@ -26,13 +25,14 @@ import org.apache.tapestry5.tree.TreeModel;
 import org.apache.tapestry5.tree.TreeModelAdapter;
 import org.hibernate.criterion.Restrictions;
 
+import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Folder;
-import com.paragonict.webapp.threader.entities.Message;
 import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
 
+@RequiresLogin
 public class Folders {
 	
 	@Inject
@@ -68,19 +68,8 @@ public class Folders {
 		resources.triggerEvent("clearFolderZone", new Object[]{}, null);
 	}
 	
-	@OnEvent(value="configAccount")
-	private Block getAccountEditor() {
-		return resources.getBlock("accountBlock");
-	}
-	
 	@OnEvent(value="composeMessage")
 	private Block getMessageEditor() throws UnsupportedEncodingException {
-		final Message newMessage = new Message();
-		newMessage.setAccount(as.getAccount().getId());
-		newMessage.setFromAdr(new InternetAddress(as.getAccount().getEmailAddress(),as.getAccount().getFullName()).toString());
-		
-		hsm.getSession().saveOrUpdate(newMessage);
-		hsm.commit();
 		return resources.getBlock("composeBlock");
 	}
 	
