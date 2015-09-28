@@ -41,7 +41,7 @@
 			      </div>
 			      <div class="modal-body">
 			        <p>Login or create an account</p>
-			        	<t:form t:id="loginform" t:mixins="ic-t5/Bootstrap">
+			        	<t:form t:id="loginform" t:mixins="tapisser/Bootstrap">
 				        	<t:errors/>
 				        	<label>Email</label>
 				        	<t:textfield value="mail"/>

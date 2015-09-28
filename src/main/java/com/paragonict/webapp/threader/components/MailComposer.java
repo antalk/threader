@@ -88,10 +88,11 @@ public class MailComposer {
 		content = "";
 		try {
 			if (getMsg().getFolder() != null && getMsg().getMsgid() != null) {
-				content = ms.getMessageContent(ms.getMessage(getMsg().getFolder(), getMsg().getMsgid()));
+				ms.getMessage(getMsg().getFolder(), getMsg().getMsgid()).getContent();
+				// TODO: content = ms.getMessage();
 				content = getMsg().getFromAdr() + " wrote:\n\r<blockquote>" + content + "</blockquote>";
 			}
-		} catch (IOException | MessagingException e) {
+		} catch (MessagingException e) {
 			e.printStackTrace();
 		}
 		mailEditor.clearErrors();

@@ -7,10 +7,9 @@
       		<div class="panel-heading bg-primary">
       			<div class="pull-left">
 		      		<div class="btn-group">
-      
-				      	<t:ic-t5.Modal t:event="composeMessage" large="true">
+      		      	<t:tapisser.Modal t:event="composeMessage" large="true">
 							<button class="btn btn-default" value=""><span class="glyphicon glyphicon-envelope"></span></button>
-						</t:ic-t5.Modal>
+						</t:tapisser.Modal>
 				      	<t:eventlink t:event="reloadfolders" t:zone="^">
 							<button class="btn btn-default" title="Reload folders from server"><span class="glyphicon glyphicon-refresh" ></span></button>
 						</t:eventlink>

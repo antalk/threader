@@ -83,10 +83,10 @@ public class Contents {
 		final com.paragonict.webapp.threader.entities.Message newMessage = new com.paragonict.webapp.threader.entities.Message();
 		newMessage.setAccount(as.getAccount().getId());
 		newMessage.setFromAdr(as.getAccount().getEmailAddress());
-		newMessage.setToAdr(getMessage().getFrom()[0].toString());// bueh
+		newMessage.setToAdr(getMessage().getFrom());// bueh
 		newMessage.setSubject("Re: " + getMessage().getSubject());
-		newMessage.setFolder(getMessage().getFolder().getFullName());
-		newMessage.setMsgid(getMessage().getMessageNumber());
+		//newMessage.setFolder(getMessage().getFolder().getFullName());
+		//newMessage.setMsgid(getMessage().getMessageNumber());
 		
 		hsm.getSession().saveOrUpdate(newMessage);
 		hsm.commit();

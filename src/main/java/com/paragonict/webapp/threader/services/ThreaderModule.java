@@ -3,9 +3,6 @@ package com.paragonict.webapp.threader.services;
 import java.io.IOException;
 import java.util.Properties;
 
-import nl.intercommit.tapestry.SymbolConstants;
-import nl.intercommit.tapestry.services.InterCommitModule;
-
 import org.apache.tapestry5.ComponentParameterConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
@@ -16,6 +13,8 @@ import org.apache.tapestry5.ioc.annotations.SubModule;
 import org.apache.tapestry5.services.ComponentRequestFilter;
 import org.apache.tapestry5.services.javascript.JavaScriptStack;
 
+import com.paragonict.tapisser.SymbolConstants;
+import com.paragonict.tapisser.services.TapisserModule;
 import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.services.filter.RequiresLoginFilter;
 import com.paragonict.webapp.threader.services.impl.AccountServiceImpl;
@@ -28,7 +27,7 @@ import com.paragonict.webapp.threader.services.internal.WizardScriptStack;
  * This module is automatically included as part of the Tapestry IoC Registry, it's a good place to
  * configure and extend Tapestry, or to place your own service definitions.
  */
-@SubModule(InterCommitModule.class)
+@SubModule(TapisserModule.class)
 public class ThreaderModule
 {
     public static void bind(ServiceBinder binder)
@@ -40,8 +39,7 @@ public class ThreaderModule
     }
 
     public static void contributeFactoryDefaults(
-            MappedConfiguration<String, Object> configuration)
-    {
+            MappedConfiguration<String, Object> configuration) {
         // The application version number is incorprated into URLs for some
         // assets. Web browsers will cache assets because of the far future expires
         // header. If existing assets are changed, the version number should also

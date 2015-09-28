@@ -17,6 +17,10 @@
 	<category name="org.apache.tapestry5">
     	<priority value="INFO"/>
    	</category>
+   	
+   	<category name="org.apache.tapestry5.services.assets">
+   		<priority value="WARN"/>
+   	</category>
 
 	<root>
 		<priority value="INFO"/>

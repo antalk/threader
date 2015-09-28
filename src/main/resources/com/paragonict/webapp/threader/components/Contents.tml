@@ -15,9 +15,9 @@
       		<div class="panel-heading bg-primary">
       			<div class="pull-left">
 		      		<div class="btn-group">
-		      			<t:ic-t5.Modal t:event="reply" large="true">
+		      			<t:tapisser.Modal t:event="reply" large="true">
 			  				<button type="button" class="btn btn-default">Reply</button>
-			  			</t:ic-t5.Modal>
+			  			</t:tapisser.Modal>
 			  			<button type="button" class="btn btn-default">ReplyAll</button>
 			  			<button type="button" class="btn btn-default">Forward</button>
 			  			<t:if test="messageread">
@@ -32,11 +32,11 @@
 			  	</div>
 				<div class="pull-right">
 					<div class="btn-group">
-						<t:ic-t5.modal t:event="viewmessage" large="true">
+						<t:tapisser.Modal t:event="viewmessage" large="true">
 							<button type="button" class="btn btn-default">
 								<span class="glyphicon glyphicon-fullscreen"></span>
 							</button>
-						</t:ic-t5.modal>
+						</t:tapisser.Modal>
 					</div>
 				</div>
 				<div class="clearfix"/>
@@ -60,7 +60,7 @@
 	 <t:block t:id="messageViewBlock">
 		 <div class="modal-header">
 	        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-	        <t:beandisplay object="message" include="subject" t:mixins="ic-t5/bootstrap"/>
+	        <t:beandisplay object="message" include="subject" t:mixins="tapisser/bootstrap"/>
 	      </div>
 	      <div class="modal-body full-height">
 			<iframe src="app/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>

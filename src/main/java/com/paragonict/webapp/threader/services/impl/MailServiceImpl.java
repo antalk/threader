@@ -215,7 +215,7 @@ public class MailServiceImpl implements IMailService {
 				} else if (f instanceof com.sun.mail.imap.IMAPFolder) {
 					UID = ""+((com.sun.mail.imap.IMAPFolder) f).getUID(m);
 				}
-				clientMsgs.add(cache.getMessage(UID, m));
+				clientMsgs.add(cache.getMessage(UID, m,true));
 			}
 			fullList = null;
 			System.err.println("END GET MSGS" + System.currentTimeMillis());
@@ -251,7 +251,7 @@ public class MailServiceImpl implements IMailService {
 			} else if (f instanceof com.sun.mail.imap.IMAPFolder) {
 				UID = ""+((com.sun.mail.imap.IMAPFolder) f).getUID(msg);
 			}
-			return cache.getMessage(UID, msg);
+			return cache.getMessage(UID, msg,true);
 		}
 		return null;
 	}
