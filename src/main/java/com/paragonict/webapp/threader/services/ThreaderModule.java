@@ -12,6 +12,7 @@ import org.apache.tapestry5.ioc.annotations.Startup;
 import org.apache.tapestry5.ioc.annotations.SubModule;
 import org.apache.tapestry5.services.ComponentRequestFilter;
 import org.apache.tapestry5.services.javascript.JavaScriptStack;
+import org.chenillekit.tapestry.core.ChenilleKitCoreModule;
 
 import com.paragonict.tapisser.SymbolConstants;
 import com.paragonict.tapisser.services.TapisserModule;
@@ -27,7 +28,7 @@ import com.paragonict.webapp.threader.services.internal.WizardScriptStack;
  * This module is automatically included as part of the Tapestry IoC Registry, it's a good place to
  * configure and extend Tapestry, or to place your own service definitions.
  */
-@SubModule(TapisserModule.class)
+@SubModule({TapisserModule.class,ChenilleKitCoreModule.class})
 public class ThreaderModule
 {
     public static void bind(ServiceBinder binder)
