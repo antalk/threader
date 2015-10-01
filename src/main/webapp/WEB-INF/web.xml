@@ -9,11 +9,7 @@
         <param-name>tapestry.app-package</param-name>
         <param-value>com.paragonict.webapp.threader</param-value>
     </context-param>
-    <!--
-    Specify some additional Modules for two different execution
-    modes: development and qa.
-    Remember that the default execution mode is production
-    -->
+   
     <filter>
         <filter-name>threader</filter-name>
         <filter-class>org.apache.tapestry5.TapestryFilter</filter-class>

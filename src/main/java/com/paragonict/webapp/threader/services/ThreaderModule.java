@@ -75,7 +75,7 @@ public class ThreaderModule
     }
     
     public static void contributeComponentRequestHandler(OrderedConfiguration<ComponentRequestFilter> configuration) {
-        configuration.addInstance("RequiresLogin", RequiresLoginFilter.class);
+        configuration.addInstance("RequiresLogin", RequiresLoginFilter.class,"after:ErrorFilter");
     }
     
     public static void contributeJavaScriptStackSource(MappedConfiguration<String, JavaScriptStack> configuration) {

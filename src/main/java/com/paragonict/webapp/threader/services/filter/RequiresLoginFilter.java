@@ -51,9 +51,10 @@ public class RequiresLoginFilter implements ComponentRequestFilter {
 			    	_rs.setStatus(401);
 			    	//_rs.sendError(401, "Action requires login");
 			    }
+			} else {
+				// just continue
+				handler.handleComponentEvent(parameters);
 			}
-			// just continue
-			handler.handleComponentEvent(parameters);
 		}
 	}
 
@@ -61,7 +62,7 @@ public class RequiresLoginFilter implements ComponentRequestFilter {
 	public void handlePageRender(PageRenderRequestParameters parameters,
 			ComponentRequestHandler handler) throws IOException {
 		
-		System.err.println("handle page render");
+		System.err.println("handle page render for page " + parameters.getLogicalPageName());
 		
 		if (_acs.isLoggedIn()) {
 			handler.handlePageRender(parameters);

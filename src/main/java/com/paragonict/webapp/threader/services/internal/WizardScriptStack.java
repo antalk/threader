@@ -38,8 +38,7 @@ public class WizardScriptStack implements JavaScriptStack {
 
 	@Override
 	public String getInitialization() {
-		
-		return null;
+		return "";
 	}
 
 }
