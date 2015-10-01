@@ -146,6 +146,28 @@
 			<groupId>org.chenillekit</groupId>
 			<artifactId>chenillekit-tapestry</artifactId>
 			<version>1.4.0</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>chenillekit-image</artifactId>
+					<groupId>org.chenillekit</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>chenillekit-google</artifactId>
+					<groupId>org.chenillekit</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.tapestry</groupId>
+					<artifactId>tapestry-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.tapestry</groupId>
+					<artifactId>tapestry-ioc</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.tapestry</groupId>
+					<artifactId>tapestry-func</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		
 		
