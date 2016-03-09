@@ -1,11 +1,11 @@
 package com.paragonict.webapp.threader.components;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
-import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage.RecipientType;
@@ -14,14 +14,17 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
+import org.apache.tapestry5.PersistenceConstants;
 import org.apache.tapestry5.SelectModel;
 import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.Import;
 import org.apache.tapestry5.annotations.OnEvent;
+import org.apache.tapestry5.annotations.Persist;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.RequestParameter;
+import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.annotations.SetupRender;
 import org.apache.tapestry5.corelib.components.BeanEditForm;
 import org.apache.tapestry5.corelib.components.Zone;
@@ -34,11 +37,12 @@ import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.hibernate.criterion.Restrictions;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
+import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Contact;
-import com.paragonict.webapp.threader.entities.Message;
+import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
-import com.paragonict.webapp.threader.services.IMailSession;
 import com.sun.mail.smtp.SMTPMessage;
 
 /**
@@ -55,9 +59,6 @@ public class MailComposer {
 	private IAccountService as;
 	
 	@Inject
-	private IMailSession ss;
-	
-	@Inject
 	private IMailService ms;
 	
 	@Inject
@@ -71,6 +72,10 @@ public class MailComposer {
 	
 	@Inject
 	private ComponentResources resources;
+	
+	@SessionState
+	private SessionStateObject sso;
+	
 	
 	@Component
 	private Zone maileditzone;
@@ -86,44 +91,49 @@ public class MailComposer {
 	@SetupRender
 	public void initializeComposer() {
 		content = "";
-		try {
-			if (getMsg().getFolder() != null && getMsg().getMsgid() != null) {
-				ms.getMessage(getMsg().getFolder(), getMsg().getMsgid()).getContent();
+		/** /try {
+			if (getMsg().getFolder() != null && getMsg().getUID() != null) {
+				//ms.getMessage(getMsg().getFolder(), getMsg().getMsgid()).getContent();
 				// TODO: content = ms.getMessage();
 				content = getMsg().getFromAdr() + " wrote:\n\r<blockquote>" + content + "</blockquote>";
 			}
-		} catch (MessagingException e) {
-			e.printStackTrace();
-		}
+		//} catch (MessagingException e) {
+			//e.printStackTrace();
+		//}**/
 		mailEditor.clearErrors();
 	}
 	
 	@Cached
-	public com.paragonict.webapp.threader.entities.Message getMsg() {
-		Message newMessage = (Message) hsm.getSession().get(Message.class, as.getAccount().getId());
-		if (newMessage == null) {
-			newMessage = new Message();
-			newMessage.setAccount(as.getAccount().getId());
+	public LocalMessage getMsg() {
+		LocalMessage draft = null;
+		if (sso.hasValue(SESSION_ATTRS.DRAFT_UID)) {
+			draft = (LocalMessage) hsm.getSession().load(LocalMessage.class, sso.getStringValue(SESSION_ATTRS.DRAFT_UID));
 		}
-		try {
-			newMessage.setFromAdr(new InternetAddress(as.getAccount().getEmailAddress(),as.getAccount().getFullName()).toString());
-		} catch (UnsupportedEncodingException e) {
-			// hmm.. will not happen?
-			e.printStackTrace();
+		if (draft == null) {
+			sso.putValue(SESSION_ATTRS.DRAFT_UID, UUID.randomUUID().toString());
+			
+			draft = new LocalMessage();
+			draft.setAccount(as.getAccount().getId());
+			draft.setFromAdr(as.getAccount().getEmailAddress());
+			draft.setFolder("DRAFTS");
+			draft.setUID(sso.getStringValue(SESSION_ATTRS.DRAFT_UID));
+			hsm.getSession().persist(draft);
+			hsm.commit();
 		}
-		hsm.getSession().saveOrUpdate(newMessage);
-		hsm.commit();
-		return newMessage;
+		return draft;
 	}
 	
 	@Cached
-	public SelectModel getAddressBook() {
+	public SelectModel getAddressBookModel() {
 		final List<String> adressBook = new LinkedList<String>();
 		
 		List<Contact> contacts = hsm.getSession().createCriteria(Contact.class).add(Restrictions.eq("owner", as.getAccount())).list();
 		
 		for (Contact c:contacts) {
 			adressBook.add(c.getMailAddress());
+		}
+		if (!adressBook.contains(getMsg().getToAdr())) {
+			adressBook.add(getMsg().getToAdr());
 		}
 		return TapestryInternalUtils.toSelectModel(adressBook);
 	}
@@ -151,13 +161,13 @@ public class MailComposer {
 	
 	@OnEvent(component="mailEditor",value=EventConstants.SUCCESS)
 	private Object sendMessage() {
-		SMTPMessage sm = new SMTPMessage(ss.getSession());
+		final SMTPMessage sm = ms.createMessage();
 		try {
 			sm.addFrom(new InternetAddress[] { new InternetAddress(getMsg().getFromAdr())});
 			for (String rec : recipients) {
 				sm.addRecipient(RecipientType.TO, new InternetAddress(rec));	
 			}
-			
+			sm.setSentDate(new Date());
 			sm.setSubject(getMsg().getSubject());
 			if (StringUtils.isBlank(content)) {
 				content = "";
@@ -165,6 +175,8 @@ public class MailComposer {
 			sm.setContent(content, "text/plain");
 			Transport.send(sm);
 			//TODO: delete persistent msg
+			
+			sso.clearValue(SESSION_ATTRS.DRAFT_UID);
 			
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -23,9 +23,11 @@ public class AccountServiceImpl implements IAccountService {
 		account = null;
 		if (asm.exists(SessionStateObject.class)) {
 			final SessionStateObject sso = asm.get(SessionStateObject.class);
-			Long id = (Long) sso.getValue(SESSION_ATTRS.USER_ID);
-			if (id != null) {
-				account = (Account) session.get(Account.class, id);
+			if (sso.hasValue(SESSION_ATTRS.USER_ID)) {
+				Long id = sso.getLongValue(SESSION_ATTRS.USER_ID);
+				// throw an exception if the account does not exist ?!?wtf happendthen?
+				// hmm load or get?
+				account = (Account) session.load(Account.class, id);
 			}
 		}
 	}

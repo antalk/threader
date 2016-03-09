@@ -12,14 +12,14 @@
 	<div class="modal-body">
 		<t:zone t:id="maileditzone" id="maileditzone">
 			<t:beaneditform t:id="mailEditor" object="msg" add="content" submitlabel="send"
-				reorder="fromadr,toadr,ccadr,bccadr,subject,content" exclude="account,folder,msgid" t:mixins="tapisser/bootstrap" zone="^">
+				reorder="fromAdr,toAdr,ccAdr,bccAdr,subject,content" exclude="account,folder,sentDate,uid" t:mixins="tapisser/bootstrap" zone="^">
 				<p:FromAdr>
 					<label>From</label>
-					<t:textfield value="msg.fromadr" readonly="readonly"/>
+					<t:textfield value="msg.fromAdr" readonly="readonly"/>
 				</p:FromAdr>
 				<p:ToAdr>
 					<label>To</label>
-					<t:tapisser.Chosen t:id="addressselect" id="addressselect" multiple="true" model="addressbook" value="msg.toadr" createOption="true" fireChangeEvent="true"/>
+					<t:tapisser.Chosen t:id="addressselect" id="addressselect" multiple="true" model="addressbookmodel" value="msg.toAdr" createOption="true" fireChangeEvent="true" multiSeparator="literal:,"/>
 		      	</p:ToAdr>
 				<p:cc>
 					<label>CC</label>

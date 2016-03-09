@@ -1,6 +1,8 @@
 package com.paragonict.webapp.threader.pages;
 
 
+import javax.mail.MessagingException;
+
 import org.apache.tapestry5.SymbolConstants;
 import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
@@ -27,21 +29,22 @@ public class Error implements ExceptionReporter  {
 
 	@Override
 	public void reportException(Throwable exception) {
-		System.err.println("Report exception!" + exception);
 		// clear session storage (except the logged in user)..
-		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER);
-		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
+		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER,SESSION_ATTRS.SELECTED_MSG_UID);
 		rootexception = exception;
 	}
 	
 	public String getCause() {
 		Throwable e = rootexception;
+		
+		final MessagingException me = org.apache.tapestry5.ioc.util.ExceptionUtils.findCause(e, MessagingException.class);
+		if (me !=null) {
+			return "An communication error occured: ["+ e.getMessage()+"]. Please retry or re-configure your email account";
+		}
 		while (e.getCause() != null) {
 			e = e.getCause();
-			
 		}
-		System.err.println(e.getMessage());
-		return e.getMessage();
+		return "An unhandled exception occured : " + e.getMessage();
 	}
 	
 }

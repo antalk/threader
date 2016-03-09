@@ -65,13 +65,10 @@ public class Folders {
 	@OnEvent(value="reloadfolders")
 	private void refreshFolderList() throws MessagingException {
 		ms.getFolders(true);
+		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER);
 		resources.triggerEvent("clearFolderZone", new Object[]{}, null);
 	}
 	
-	@OnEvent(value="composeMessage")
-	private Block getMessageEditor() throws UnsupportedEncodingException {
-		return resources.getBlock("composeBlock");
-	}
 	
 	@Cached
 	public TreeModel<Folder> getFolderModel() throws MessagingException {
@@ -83,7 +80,7 @@ public class Folders {
 			}
 
 			public Folder toValue(String clientValue) {
-				// clientvalue is the uuid
+				// clientvalue is the id
 				// pff.. hmm
 				return (Folder) hsm.getSession().load(Folder.class, Long.parseLong(clientValue));
 			}
@@ -105,7 +102,7 @@ public class Folders {
 			}
 
 			public String getLabel(Folder value) {
-				return value.getLabel();
+				return value.getName();
 			}
 		};
 		
@@ -128,9 +125,9 @@ public class Folders {
 				return 0;
 			}
 		});
-		
+	
 		// just select the FIRST folder as default, if nothgin selected
-		if (sso.getValue(SESSION_ATTRS.SELECTED_FOLDER) == null) {
+		if (!sso.hasValue(SESSION_ATTRS.SELECTED_FOLDER)) {
 			sso.putValue(SESSION_ATTRS.SELECTED_FOLDER, roots.get(0).getName());
 		}
 		
@@ -142,7 +139,7 @@ public class Folders {
 	}
 	
 	public String getFolderSelected() {
-		return (currentFolder.getName().equals(sso.getValue(SESSION_ATTRS.SELECTED_FOLDER))?"selected":"notselected");
+		return (currentFolder.getName().equals(sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER))?"selected":"notselected");
 	}
 	
 	public String getFolderId() {

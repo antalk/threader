@@ -3,33 +3,40 @@ package com.paragonict.webapp.threader.services;
 import java.io.IOException;
 import java.util.List;
 
+import javax.annotation.Nullable;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 
 import org.apache.tapestry5.grid.SortConstraint;
 
-import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.entities.Folder;
+import com.paragonict.webapp.threader.entities.LocalMessage;
+import com.sun.mail.smtp.SMTPMessage;
 
 public interface IMailService {
 
 	// get all folder and return root
 	public Folder getFolders(boolean renew) throws MessagingException;
 	
-	public List<ClientMessage> getMessages(final String folder,int start,int end,SortConstraint sc) throws MessagingException;
+	public List<LocalMessage> getMessages(final String folder,int start,int end,int mailTotal,@Nullable SortConstraint sc) throws MessagingException;
 	
 	public Integer getNrOfMessages(final String folder) throws MessagingException;
 	
-	/**
-	 * Gets the complete message, incl. content as a client side object and provides caching
-	 * 
-	 * @param folder
-	 * @param msgId
-	 * @return
-	 * @throws MessagingException
-	 */
-	public ClientMessage getMessage(final String folder, final Integer msgId) throws MessagingException;
+	public LocalMessage getLocalMessage(final String UID) throws MessagingException;
 	
-	//public String getMessageContent(final Part p) throws IOException, MessagingException;
+	/**
+	 * Get the (cached) {@link Message} for {@link LocalMessage}
+	 * 
+	 * @param message
+	 * @return
+	 * @throws MessagingException if the {@link Message} does not exist anymore.
+	 */
+	public Message getMailMessage(final LocalMessage message) throws MessagingException;
+		
+	public SMTPMessage createMessage();
+	
+	public String getMessageContent(Part p) throws IOException,MessagingException;
+	
+	public boolean isMessageRead(final LocalMessage message) throws MessagingException;
 }

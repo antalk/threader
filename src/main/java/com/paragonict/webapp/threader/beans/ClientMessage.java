@@ -1,7 +1,6 @@
 package com.paragonict.webapp.threader.beans;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import javax.mail.Message;
 
@@ -11,51 +10,54 @@ import javax.mail.Message;
  * @author avankalleveen
  *
  */
+@Deprecated
 public class ClientMessage implements Serializable {
 
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3317865513040961960L;
 	
-	private Integer msgId;
-	private String from;
-	private String subject;
-	private Date sentDate;
-	private boolean read;
+	/*
+	private final String UUID;
+	private final String from;
+	private final String subject;
+	private final Date sentDate;
+	
+	// setable
+	private  boolean read;
 	private String content;
 	private String contentType;
 	
-	public Integer getMsgId() {
-		return msgId;
+	public ClientMessage(final Message msg,final String UUID) throws MessagingException {
+		this.UUID = UUID;
+		this.from = Utils.addressesToString(msg.getFrom());
+		this.subject = msg.getSubject();
+		this.sentDate = msg.getSentDate();
+		this.read = false;
 	}
-	public void setMsgId(Integer msgId) {
-		this.msgId = msgId;
+	
+	public String getUUID() {
+		return UUID;
 	}
+	
 	public String getFrom() {
 		return from;
 	}
-	public void setFrom(String from) {
-		this.from = from;
-	}
+	
 	public String getSubject() {
 		return subject;
 	}
-	public void setSubject(String subject) {
-		this.subject = subject;
-	}
+	
 	public Date getSentDate() {
 		return sentDate;
 	}
-	public void setSentDate(Date sentDate) {
-		this.sentDate = sentDate;
-	}
+	
 	public boolean isRead() {
 		return read;
 	}
-	public void setRead(boolean read) {
-		this.read = read;
-	}
+	
 	public String getContent() {
 		return content;
 	}
@@ -68,6 +70,6 @@ public class ClientMessage implements Serializable {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
-	
+	*/
 	
 }

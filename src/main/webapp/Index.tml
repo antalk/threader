@@ -7,7 +7,7 @@
       <t:delegate to="activeblock"/>
     </div>
       
-      <t:block t:id="main">
+    <t:block t:id="main">
       
       	<div class="well-sm">
     		<t:alerts/>
@@ -65,5 +65,9 @@
 				  backdrop :'static'
 				});
 			</script>
-	</t:block>      
+	</t:block>
+	
+	<t:block t:id="composeBlock">	
+		<t:MailComposer/>
+	</t:block>
 </html>

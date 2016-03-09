@@ -17,21 +17,53 @@ public final class SessionStateObject implements Serializable {
 	private static final long serialVersionUID = -4921901719328401682L;
 	
 	public enum SESSION_ATTRS {
-		USER_ID,
-		ADMIN_ID,
-		SELECTED_FOLDER,
-		SELECTED_MSG_ID;
+		USER_ID(Long.class),
+		ADMIN_ID(Long.class),
+		SELECTED_FOLDER(String.class),
+		DRAFT_UID(String.class),
+		SELECTED_MSG_UID(String.class);   // String, UUID of the message
+		
+		private final Class clazz;
+		
+		private SESSION_ATTRS(Class clazz) {
+			this.clazz = clazz;
+		}
+		
+		public Class getClazz() {
+			return clazz;
+		}
 	}
 
-	private Map<String,Object> _internalMap;
+	private  Map<String,Object> _internalMap;
 	
 	// public constructor used for creation of the object by Tapestry
 	public SessionStateObject() {
 		_internalMap = new HashMap<String, Object>(4); // not too big..
 	}
+	
+	public boolean hasValue(final SESSION_ATTRS key) {
+		return _internalMap.get(key.name()) != null;
+	}
+	
+	public String getStringValue(final SESSION_ATTRS key) {
+		return getValue(key,String.class);
+	}
+	
+	public Integer getIntegerValue(final SESSION_ATTRS key) {
+		return getValue(key,Integer.class);
+	}
+	
+	public Long getLongValue(final SESSION_ATTRS key) {
+		return getValue(key,Long.class);
+	}
+	
 
-	public Object getValue(final SESSION_ATTRS key) {
-		return _internalMap.get(key.name());
+	@SuppressWarnings("unchecked")
+	private <T> T getValue(final SESSION_ATTRS key,Class<T> clazz) {
+		if (!(key.getClazz().equals(clazz))) {
+			throw new IllegalArgumentException("Session variable ["+key+"] is not a(n) : " + clazz + ". But :"+ key.getClazz());
+		}
+		return (T) _internalMap.get(key.name());
 	}
 
 	/**
@@ -42,11 +74,17 @@ public final class SessionStateObject implements Serializable {
 	 * @param value
 	 */
 	public void putValue(final SESSION_ATTRS key,final Object value) {
+		if (!(value.getClass().equals(key.getClazz()))) {
+			throw new IllegalArgumentException("Session value ["+value+"] is not a(n) : " + key.getClazz());
+
+		}
 		_internalMap.put(key.name(), value);
 	}
 	
-	public void clearValue(final SESSION_ATTRS key) {
-		_internalMap.remove(key.name());
+	public void clearValue(final SESSION_ATTRS... key) {
+		for (SESSION_ATTRS k: key) {
+			_internalMap.remove(k.name());
+		}
 	}
 	
 	public void clearAll() {

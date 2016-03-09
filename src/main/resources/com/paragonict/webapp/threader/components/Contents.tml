@@ -42,11 +42,11 @@
 				<div class="clearfix"/>
 			</div>
 			<div class="panel-body">
-      			<t:beandisplay object="message" include="subject" exclude="content"/>
+      			<t:beandisplay object="message" include="subject" />
       		</div>
       	</div>
 	   	<div class="full-height">
-	   		<t:outputraw value="message.content"/>
+	   		<t:outputraw value="messagecontent"/>
 	   	<!-- 
 		   	<iframe src="app/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
 		   	 -->

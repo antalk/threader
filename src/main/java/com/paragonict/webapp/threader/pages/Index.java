@@ -1,8 +1,13 @@
 package com.paragonict.webapp.threader.pages;
 
 
+import java.io.UnsupportedEncodingException;
+
+import javax.mail.MessagingException;
+
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.EventConstants;
+import org.apache.tapestry5.EventContext;
 import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.OnEvent;
@@ -15,7 +20,6 @@ import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.hibernate.criterion.Restrictions;
 
-import com.paragonict.webapp.threader.ApplicationEvents;
 import com.paragonict.webapp.threader.base.AppPage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Account;
@@ -40,7 +44,7 @@ public class Index extends AppPage {
 	
 	@Component
 	private Zone contentZone;
-
+	
 	@Component
 	private Form loginForm;
 	
@@ -50,22 +54,35 @@ public class Index extends AppPage {
 	@Property
 	private String password;
 	
-	@OnEvent(value=ApplicationEvents.MESSAGING_EXCEPTION_EVENT)
-	private Object catchAndDisplayException(Exception e) {
+	Object onException(Throwable cause) {
+		
+		final MessagingException me = org.apache.tapestry5.ioc.util.ExceptionUtils.findCause(cause, MessagingException.class);
+		if (me !=null) {
+			//getLogger().error("MessagingException",cause);
+			//am.error("An communication error occured: ["+ cause.getMessage()+"]. Please retry or re-configure your email account");
+			//return getPrls().createPageRenderLink(Index.class);
+		}
 		return null;
 	}
 	
 	@OnEvent(component="loginform",value=EventConstants.SUBMIT)
 	private void loginUser() {
-		System.err.println("login with" + mail);
+		getSso().clearValue(SESSION_ATTRS.USER_ID);
+		System.err.println("login with" + mail + "and pw: " +password);
 		
-		Account user = (Account) getHsm().getSession().createCriteria(Account.class).add(Restrictions.eq("emailAddress", mail)).uniqueResult();
+		final Account user = (Account) getHsm().getSession().createCriteria(Account.class).add(Restrictions.eq("emailAddress", mail)).uniqueResult();
 		if (user != null) {
-			getSso().putValue(SESSION_ATTRS.USER_ID, user.getId());
+			if (user.getPassword().equals(password)) {
+				getSso().putValue(SESSION_ATTRS.USER_ID, user.getId());
+			} else {
+				loginForm.recordError("Wrong user and/or password");
+			}
 		} else {
-			loginForm.recordError("No such user");
+			loginForm.recordError("Wrong user and/or password");
 		}
 	}
+	
+	
 	
 	@OnEvent(value="createAccount")
 	private Object getAccountPage() {
@@ -76,6 +93,7 @@ public class Index extends AppPage {
 	private void getFolderContents(final Long id) {
 		final Folder selectedFolder = (Folder) getHsm().getSession().load(Folder.class, id);
 		getSso().putValue(SESSION_ATTRS.SELECTED_FOLDER, selectedFolder.getName());
+		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
 		getArr().addRender(messageZone).addCallback(new JavaScriptCallback() {
 			
 			@Override
@@ -85,16 +103,26 @@ public class Index extends AppPage {
 		});
 	}
 	
+	@OnEvent(value="composeMessage")
+	private Block getMessageEditor(EventContext context) throws UnsupportedEncodingException {
+		if (context.getCount() == 1) {
+			String UID = context.get(String.class,0);
+			getSso().putValue(SESSION_ATTRS.DRAFT_UID, UID);
+		}
+		return getResources().getBlock("composeBlock");
+	}
+
+	
 	@OnEvent(value="getMessageContent")
-	private Block getMessageContents(final Integer id) {
-		getSso().putValue(SESSION_ATTRS.SELECTED_MSG_ID, id);
+	private Block getMessageContents(final String UID) {
+		getSso().putValue(SESSION_ATTRS.SELECTED_MSG_UID, UID);
 		return contentZone.getBody();
 	}
 	
 	@OnEvent(value="clearFolderZone")
 	private void reloadFolders() { 
 		getSso().clearValue(SESSION_ATTRS.SELECTED_FOLDER);
-		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
+		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
 		getArr().addRender(folderZone).addRender(messageZone).addRender(contentZone);
 	}
 	

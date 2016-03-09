@@ -1,6 +1,6 @@
 <ehcache> 
   <diskStore path="java.io.tmpdir"/> 
-  <cache name="mailmessages"
+  <defaultCache
     		eternal="false"
            maxElementsOnDisk="0"
            maxElementsInMemory="25"

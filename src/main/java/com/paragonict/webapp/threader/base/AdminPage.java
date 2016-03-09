@@ -10,7 +10,7 @@ import com.paragonict.webapp.threader.pages.admin.Index;
 public abstract class AdminPage extends BasicPage {
 	
 	public Object onActivate() {
-		if (getSso().getValue(SESSION_ATTRS.ADMIN_ID) == null) {
+		if (!getSso().hasValue(SESSION_ATTRS.ADMIN_ID)) {
 			
 			if (!getResources().getPage().getClass().equals(Index.class)) {
 				return getPrls().createPageRenderLink(Index.class);// not logged in ? go to admin index, will show login popup

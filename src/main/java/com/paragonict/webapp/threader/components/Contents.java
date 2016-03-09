@@ -3,7 +3,6 @@ package com.paragonict.webapp.threader.components;
 import java.io.IOException;
 
 import javax.mail.Flags.Flag;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 
 import org.apache.tapestry5.Block;
@@ -16,9 +15,9 @@ import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
-import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
+import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
 
@@ -41,35 +40,40 @@ public class Contents {
 	private ComponentResources resources;
 	
 	public boolean getMessageSelected() {
-		return (sso.getValue(SESSION_ATTRS.SELECTED_MSG_ID) != null &&
-				sso.getValue(SESSION_ATTRS.SELECTED_FOLDER) != null);
+		return (sso.hasValue(SESSION_ATTRS.SELECTED_MSG_UID) &&
+				sso.hasValue(SESSION_ATTRS.SELECTED_FOLDER));
 	}
 	
 	
 	@Cached
-	public ClientMessage getMessage()  throws MessagingException {
+	public LocalMessage getMessage()  throws MessagingException {
 		if (getMessageSelected()) {
-			return ms.getMessage((String)sso.getValue(SESSION_ATTRS.SELECTED_FOLDER), (Integer)sso.getValue(SESSION_ATTRS.SELECTED_MSG_ID));
+			return ms.getLocalMessage(sso.getStringValue(SESSION_ATTRS.SELECTED_MSG_UID));
 		}
 		throw new MessagingException("Cannot retrieve selected message");
 	}
 	
+	public String getMessageContent() throws MessagingException, IOException {
+		return (String) ms.getMailMessage(getMessage()).getContent();
+	}
+	
+	
 	@OnEvent(value=EventConstants.PROGRESSIVE_DISPLAY)
 	private Block loadMessages() throws MessagingException {
-		getMessage();
+		ms.getMailMessage(getMessage()).setFlag(Flag.SEEN, true);
 		return resources.getBlock("contentblock");
 	}
 	
 	@OnEvent(value="markasunread")
 	private Block markMessageAsUnread() throws MessagingException {
-		//().setFlag(Flag.SEEN,false);
+		ms.getMailMessage(getMessage()).setFlag(Flag.SEEN, false);
 		return resources.getBlock("contentblock");
 	}
 	
 	@OnEvent(value="deletemessage")
 	private void deleteMessage() throws MessagingException {
 		//getMessage().setFlag(Flag.DELETED,true);
-		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
+		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
 		resources.triggerEvent("reloadContent", new Object[]{}, null);
 	}
 	
@@ -80,11 +84,12 @@ public class Contents {
 	
 	@OnEvent(value="reply")
 	private Block replyToMessage() throws MessagingException, IOException {
-		final com.paragonict.webapp.threader.entities.Message newMessage = new com.paragonict.webapp.threader.entities.Message();
+		final com.paragonict.webapp.threader.entities.LocalMessage newMessage = new com.paragonict.webapp.threader.entities.LocalMessage();
 		newMessage.setAccount(as.getAccount().getId());
 		newMessage.setFromAdr(as.getAccount().getEmailAddress());
-		newMessage.setToAdr(getMessage().getFrom());// bueh
-		newMessage.setSubject("Re: " + getMessage().getSubject());
+		newMessage.setToAdr(getMessage().getFromAdr());
+		
+		newMessage.setSubject(resources.getMessages().get("reply.prefix") + getMessage().getSubject());
 		//newMessage.setFolder(getMessage().getFolder().getFullName());
 		//newMessage.setMsgid(getMessage().getMessageNumber());
 		
@@ -94,7 +99,7 @@ public class Contents {
 	}
 	
 	public boolean getMessageRead() throws MessagingException {
-		return getMessage().isRead();
+		return ms.getMailMessage(getMessage()).getFlags().contains(Flag.SEEN);
 	}
 	
 	

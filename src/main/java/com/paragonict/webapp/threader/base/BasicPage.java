@@ -7,6 +7,7 @@ import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.PageRenderLinkSource;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
+import org.slf4j.Logger;
 
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 
@@ -15,6 +16,9 @@ import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
  * 
  */
 public abstract class BasicPage {
+	
+	@Inject
+	private Logger logger;
 	
 	@Inject
 	private HibernateSessionManager hsm;
@@ -82,6 +86,8 @@ public abstract class BasicPage {
 		this.sso = sso;
 	}
 	
-	
+	public Logger getLogger() {
+		return logger;
+	}
 
 }

@@ -116,7 +116,7 @@ public class AccountEditor {
 		if (StringUtils.isBlank(getAccount().getHost())) {
 			accountedit.recordError("Host cannot be empty");
 		}
-		if (getAccount().getProtocol()==null) {
+		if (protocol==null) {
 			accountedit.recordError("Protocol cannot be empty");
 		}
 		if (StringUtils.isBlank(getAccount().getPassword())) {

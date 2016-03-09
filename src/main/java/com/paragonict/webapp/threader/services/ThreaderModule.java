@@ -19,9 +19,8 @@ import com.paragonict.tapisser.services.TapisserModule;
 import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.services.filter.RequiresLoginFilter;
 import com.paragonict.webapp.threader.services.impl.AccountServiceImpl;
-import com.paragonict.webapp.threader.services.impl.MailCacheManager;
 import com.paragonict.webapp.threader.services.impl.MailServiceImpl;
-import com.paragonict.webapp.threader.services.impl.MailSessionImpl;
+import com.paragonict.webapp.threader.services.impl.MailStoreImpl;
 import com.paragonict.webapp.threader.services.internal.WizardScriptStack;
 
 /**
@@ -34,8 +33,7 @@ public class ThreaderModule
     public static void bind(ServiceBinder binder)
     {
         binder.bind(IMailService.class,MailServiceImpl.class);
-        binder.bind(IMailCache.class,MailCacheManager.class);
-        binder.bind(IMailSession.class,MailSessionImpl.class).scope(ScopeConstants.PERTHREAD);
+        binder.bind(IMailStore.class,MailStoreImpl.class).scope(ScopeConstants.PERTHREAD);
         binder.bind(IAccountService.class,AccountServiceImpl.class).scope(ScopeConstants.PERTHREAD);
     }
 
@@ -85,15 +83,44 @@ public class ThreaderModule
     
     /*
     public static void contributeTypeCoercer(Configuration<CoercionTuple> configuration) {
-        Coercion<Account.PROTOCOL, String> coercion = new Coercion<Account.PROTOCOL, String>() {
+    	// Address[] to String
+        Coercion<Address[], String> adrToString = new Coercion<Address[], String>() {
 	
-        	public String coerce(PROTOCOL input) {
-               return input.name();
+        	public String coerce(Address[] input) {
+        		String address = "";
+        		for (Address a: input) {
+            	   address = address + a.toString();
+        		}
+        		return address;
             }
         };
       
-        configuration.add(new CoercionTuple<Account.PROTOCOL, String>(Account.PROTOCOL.class, String.class, coercion));    
+        configuration.add(new CoercionTuple<Address[], String>(Address[].class, String.class, adrToString));
+        
+     // String to Address[]
+        Coercion<String, Address[]> strToAdr = new Coercion<String, Address[]>() {
+	
+        	public Address[] coerce(String input) {
+        		Address[] addresses = new Address[] {};
+        		for (String s: input.split(",")) {
+        			Address a;
+					try {
+						a = new InternetAddress(s);
+						addresses = (Address[]) ArrayUtils.add(addresses, a);
+					} catch (AddressException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+        			
+        		}
+        		return addresses;
+            }
+        };
+      
+        configuration.add(new CoercionTuple<String,Address[]>(String.class,Address[].class, strToAdr));
+        System.err.println("Coercer config: "+ configuration);
     }*/
+    
     @Startup
     public void doAfterStart() {
     	

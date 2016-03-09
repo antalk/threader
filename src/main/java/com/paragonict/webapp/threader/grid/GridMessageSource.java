@@ -1,5 +1,6 @@
 package com.paragonict.webapp.threader.grid;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.mail.MessagingException;
@@ -7,42 +8,38 @@ import javax.mail.MessagingException;
 import org.apache.tapestry5.grid.GridDataSource;
 import org.apache.tapestry5.grid.SortConstraint;
 
-import com.paragonict.webapp.threader.beans.ClientMessage;
+import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IMailService;
 
 public class GridMessageSource implements GridDataSource {
 	
 	private final IMailService _ms;
 	private final String _folder;
-	private List<ClientMessage> preparedResults;
+	private List<LocalMessage> preparedResults;
 	
 	private int _startIndex;
+	private final int _nrOfRows;
 	
-	public GridMessageSource(final IMailService ms,final String folder) {
+	public GridMessageSource(final IMailService ms,final String folder) throws MessagingException {
 		_ms = ms;
 		_folder = folder;
+		_nrOfRows = _ms.getNrOfMessages(folder);// fail fast..
 	}
 	
 
 	@Override
 	public int getAvailableRows() {
-		try {
-			return _ms.getNrOfMessages(_folder);
-		} catch (MessagingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return 0;
-		}
+		return _nrOfRows;
 	}
 
 	@Override
-	public void prepare(int startIndex, int endIndex,
-			List<SortConstraint> sortConstraints) {
+	public void prepare(int startIndex, int endIndex,List<SortConstraint> sortConstraints) {
+		
 		try {
 			
 			_startIndex = startIndex;
 			
-			System.err.println("GRID START MSGS" + System.currentTimeMillis());
+			System.err.println("GRID START MSGS: " + System.currentTimeMillis());
 			
 			System.err.println("START" + startIndex );
 			System.err.println("END" + endIndex );
@@ -52,24 +49,24 @@ public class GridMessageSource implements GridDataSource {
 			if (!sortConstraints.isEmpty()) {
 				sc = sortConstraints.get(0);
 			}
-			
-			preparedResults = _ms.getMessages(_folder, startIndex, endIndex,sc);
-			System.err.println("GRID END MSGS" + System.currentTimeMillis());
+			preparedResults = _ms.getMessages(_folder, startIndex, endIndex,_nrOfRows,sc);
+			System.err.println("GRID END MSGS: " + System.currentTimeMillis());
 			
 		} catch (MessagingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			preparedResults = Collections.emptyList();
 		}
 	}
 
 	@Override
-	public ClientMessage getRowValue(int index) {
+	public LocalMessage getRowValue(int index) {
 		return preparedResults.get(index-_startIndex);
 	}
 
 	@Override
-	public Class<ClientMessage> getRowType() {
-		return ClientMessage.class;
+	public Class<LocalMessage> getRowType() {
+		return LocalMessage.class;
 	}
 
 }

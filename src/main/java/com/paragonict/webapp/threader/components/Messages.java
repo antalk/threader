@@ -1,8 +1,10 @@
 package com.paragonict.webapp.threader.components;
 
+import javax.mail.Flags.Flag;
 import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;
 import org.apache.tapestry5.ComponentResources;
@@ -22,9 +24,9 @@ import org.apache.tapestry5.services.BeanModelSource;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
-import com.paragonict.webapp.threader.beans.ClientMessage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
+import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.grid.GridMessageSource;
 import com.paragonict.webapp.threader.services.IMailService;
 
@@ -50,10 +52,12 @@ public class Messages {
 	private Grid messageGrid;
 	
 	@Property
-	private ClientMessage message;
+	private LocalMessage message;
 	
 	@SetupRender
 	private void setup() {
+		
+// sorting by default on sentDate, can be from and subject...		
 		if (messageGrid.getSortModel().getSortConstraints().isEmpty()) {
 			while (messageGrid.getSortModel().getColumnSort("sentDate").compareTo(ColumnSort.DESCENDING) !=0) {
 				messageGrid.getSortModel().updateSort("sentDate");
@@ -62,10 +66,9 @@ public class Messages {
 	}
 	
 	public boolean getFolderSelected() {
-		return sso.getValue(SESSION_ATTRS.SELECTED_FOLDER) != null;
+		return sso.hasValue(SESSION_ATTRS.SELECTED_FOLDER);
 	}
-
-	
+		
 	@OnEvent(value=EventConstants.PROGRESSIVE_DISPLAY)
 	private Block loadMessages() throws MessagingException {
 		//getMessageSource();
@@ -74,18 +77,21 @@ public class Messages {
 	
 	@Cached
 	public GridDataSource getMessageSource() throws MessagingException {
-		final String selectedFolder = (String)sso.getValue(SESSION_ATTRS.SELECTED_FOLDER);
+		final String selectedFolder = sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER);
 		//int endIndex = ms.getNrOfMessages(selectedFolder);
 		return new GridMessageSource(ms,selectedFolder);
 	}
 	
-	/*
 	@Cached
-	public BeanModel<Message> getMessageModel() {
-		return bms.createDisplayModel(Message.class, resources.getMessages());
-	}*/
+	public boolean getIsDraftFolder() {
+		return sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER).equalsIgnoreCase("DRAFTS");
+	}
 	
+	public boolean getMessageRead() throws MessagingException {
+		return ms.isMessageRead(message);
+	}
 	
+	/* display properties */
 	public String getSubject() throws MessagingException {
 		if (StringUtils.isBlank(message.getSubject())) {
 			return "<No Subject>";
@@ -93,15 +99,23 @@ public class Messages {
 		return message.getSubject();
 	}
 	
+	public String getMessageDate() throws MessagingException {
+		if (message.getSentDate() == null) {
+			return "<Unknown>";
+		}
+		
+		return DateFormatUtils.ISO_DATETIME_FORMAT.format(message.getSentDate());
+	}
+	
 	
 	@OnEvent(value="fetchMessageContent")
-	private void refreshFolderContent(Integer id) {
+	private void getMessageContent(String UID) {
 		
-		System.err.println("Refresh the message content");
+		System.err.println("Read the message content");
 		
 		final Holder<Block> holder = new Holder<Block>();
 		
-		if (resources.triggerEvent("getMessageContent", new Object[] {id}, new ComponentEventCallback<Block>() {
+		if (resources.triggerEvent("getMessageContent", new Object[] {UID}, new ComponentEventCallback<Block>() {
 
 			public boolean handleResult(Block result) {
 				holder.put(result);

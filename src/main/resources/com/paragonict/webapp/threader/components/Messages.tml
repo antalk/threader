@@ -22,17 +22,25 @@
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
-				  <t:grid t:id="messageGrid" source="messageSource" row="message" exclude="read,msgid,content,contenttype" zone="messageZone" reorder="from,subject,sentdate" >
+				  <t:grid t:id="messageGrid" source="messageSource" include="fromAdr,sentDate,subject" row="message"  zone="messageZone">
 				  	<p:subjectCell>
-				  		<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.msgid">
-				  			<t:if test="message.read">
-				  				${subject}
-				  				<p:else>
-				  					<b>${subject}</b>
-				  				</p:else>
-				  			</t:if>
-				  		</t:eventlink>
+				  		<t:if test="isDraftFolder">
+					  		<t:tapisser.Modal t:event="composeMessage" t:context="message.uid" large="true">edit draft</t:tapisser.Modal>
+				  			<p:else>
+				  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.UID">
+						  			<t:if test="messageRead">
+						  				${subject}
+						  				<p:else>
+						  					<b>${subject}</b>
+						  				</p:else>
+						  			</t:if>
+						  		</t:eventlink>
+				  			</p:else>
+				  		</t:if>
 				  	</p:subjectCell>
+				  	<p:sentDateCell>
+				  		${messageDate}
+				  	</p:sentDateCell>
 				</t:grid>
 			</div>
 		</div>

@@ -1,24 +1,6 @@
 package com.paragonict.webapp.threader.pages.app;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-
-import org.apache.tapestry5.EventConstants;
-import org.apache.tapestry5.StreamResponse;
-import org.apache.tapestry5.annotations.OnEvent;
-import org.apache.tapestry5.annotations.SessionState;
-import org.apache.tapestry5.ioc.annotations.Inject;
-import org.apache.tapestry5.services.Response;
-import org.apache.tapestry5.util.TextStreamResponse;
-
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
-import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
-import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
-import com.paragonict.webapp.threader.services.IMailService;
 
 @RequiresLogin
 public class MessageContent {
