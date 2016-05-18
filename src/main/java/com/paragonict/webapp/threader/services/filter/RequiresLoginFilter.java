@@ -47,9 +47,7 @@ public class RequiresLoginFilter implements ComponentRequestFilter {
 				if (! comp.getClass().isAnnotationPresent(RequiresLogin.class)) {
 			    	handler.handleComponentEvent(parameters);
 			    } else {
-			    	_rs.getOutputStream("text/html").write("<html>ja daag</html>".getBytes());
-			    	_rs.setStatus(401);
-			    	//_rs.sendError(401, "Action requires login");
+			    	_rs.sendError(401, "You are not logged in (anymore). Please reload the application");
 			    }
 			} else {
 				// just continue

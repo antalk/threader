@@ -8,6 +8,8 @@ import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 
 import com.paragonict.webapp.threader.Utils;
 import com.sun.mail.imap.IMAPFolder;
@@ -18,9 +20,17 @@ import com.sun.mail.pop3.POP3Folder;
  * 
  * 
  */
+@NamedQueries({
+	@NamedQuery(
+	name = LocalMessage.GET_ALL_UIDS,
+	query = "select m.UID from LocalMessage m where m.account = :accountid and m.folder = :folder"
+	)
+})
 @Entity
 public class LocalMessage implements Serializable {
 
+	public static final String GET_ALL_UIDS = "getAllUidsForFolderForUser";
+	
 	private static final long serialVersionUID = 6269536651318304698L;
 
 	enum TYPE {

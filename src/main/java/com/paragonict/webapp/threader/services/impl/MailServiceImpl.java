@@ -37,6 +37,7 @@ import com.paragonict.webapp.threader.services.IMailService;
 import com.paragonict.webapp.threader.services.IMailSession;
 import com.paragonict.webapp.threader.services.IMailStore;
 import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.IMAPFolder.FetchProfileItem;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.smtp.SMTPMessage;
 
@@ -122,6 +123,9 @@ public class MailServiceImpl implements IMailService {
 					draftFolder.setParent(rootFolder);
 					draftFolder.setLabel("DRAFTS");
 					hsm.getSession().persist(draftFolder);
+					
+					//TODO: sent and deleted ?? 
+					
 				}
 				hsm.commit();
 				
@@ -156,15 +160,20 @@ public class MailServiceImpl implements IMailService {
 				childFolder.setUnreadMsgs(f.getUnreadMessageCount());	
 			}
 			
+			List<javax.mail.Folder> childs = new ArrayList<javax.mail.Folder>();
+			if ((f.getType() & javax.mail.Folder.HOLDS_FOLDERS) ==2) {
+				childs = Arrays.asList(f.list("%"));
+			}
+			childFolder.setHasChilds(!childs.isEmpty());
+			
+			if (f instanceof IMAPFolder) {
+				// set some more stuff
+				childFolder.setUidValidity(((IMAPFolder)f).getUIDValidity());
+			}
 			hsm.getSession().persist(childFolder);
 			
-			if ((f.getType() & javax.mail.Folder.HOLDS_FOLDERS) ==2) {
-				final List<javax.mail.Folder> childs = Arrays.asList(f.list("%"));
-				if (!childs.isEmpty()) {
-					childFolder.setHasChilds(true);
-					hsm.getSession().persist(childFolder);
-					persistFolders(childFolder, childs);
-				}
+			if (!childs.isEmpty()) {
+				persistFolders(childFolder, childs);
 			}
 		}
 	}
@@ -179,50 +188,60 @@ public class MailServiceImpl implements IMailService {
 			// onyl if there are MORE msgs on server, add them first to the db.
 			// deletes will be immediately
 			// and remote deletes will show up when you try to open the message.
-			Criteria criteria = hsm.getSession().createCriteria(LocalMessage.class);
-			criteria.add(Restrictions.eq("account", as.getAccount().getId())); // how about only YOUR messages
-			criteria.add(Restrictions.eq("folder", folder));
-	        criteria.setProjection(Projections.rowCount());
-	        Number nrofDBRows = (Number)criteria.uniqueResult();
+			
+			// FETCH ALL LOCAL UIDS FROM the selected folder
+			final List<String> storedUIDs = hsm.getSession().getNamedQuery(LocalMessage.GET_ALL_UIDS).
+				setLong("accountid", as.getAccount().getId()).
+				setString("folder",folder).list();
+			
+			int nrofDBRows = storedUIDs.size();
+			
+	        logger.debug("Nr. of local stored messages {}, number of message on server {}", nrofDBRows,mailTotal);
 	        
-	        
-	        
-	        if (mailTotal > nrofDBRows.intValue()) {
+	        if (mailTotal > nrofDBRows) {
 	        	// this is also wrong the results coudl be the same but different message could be added / deleted from a 
 	        	// remote client..... (with the same account.... though..)
 	        	// maybe a possible solution is to periodically check for changes and update the local db as such...
 	        	// or add some listeners to mailserver updates...
 	        	
-	        	// for now assume additions only..
-	        	int nrToRetrieve = mailTotal-nrofDBRows.intValue();
-	        	
-	        	System.err.println("GET MSGS" + System.currentTimeMillis());
-				javax.mail.Folder f = store.getFolder(folder);
+	        	javax.mail.Folder f = store.getFolder(folder);
 				if (!f.isOpen()) {
 					f.open(javax.mail.Folder.READ_ONLY); // read only, RW will be done per individual message
 				}
 				
-				Message[] msgs = new Message[nrToRetrieve];
-				msgs = f.getMessages(nrofDBRows.intValue()+1,mailTotal); // fetch the difference...
+				final Message[] msgs = f.getMessages();
 				final FetchProfile fp = new FetchProfile();
-				fp.add(javax.mail.FetchProfile.Item.ENVELOPE);
+				fp.add(javax.mail.UIDFolder.FetchProfileItem.UID);
 				f.fetch(msgs, fp);
 				
-				// store by uid in DB
-				for (Message m: msgs) {
-					logger.debug("Adding new localmessage from {} ",m);
+				LocalMessage possiblyNewMsg = null;
+				for (Message m:msgs) {
+					// filter the message we already have
+					possiblyNewMsg = new LocalMessage(m, as.getAccount());
 					
-					hsm.getSession().save(new LocalMessage(m, as.getAccount()));
+					if (storedUIDs.contains(possiblyNewMsg.getUID())) {
+						logger.debug("Message with UID {} already stored, skipping",possiblyNewMsg.getUID());
+						storedUIDs.remove(possiblyNewMsg.getUID()); // remove from list
+					} else {
+						// ah new mssg
+						logger.debug("Adding new localmessage from {} ",m);
+						hsm.getSession().save(possiblyNewMsg);
+						nrofDBRows++;
+					}
+					// then a quick break if we are in sync
+					if (nrofDBRows == mailTotal) {
+						logger.debug("Number of messages {} on server and in DB match, stop searching",nrofDBRows);
+						break;// dont bother in searching the rest..
+					}
 				}
+				// now we have stored ALL new msgs
 				hsm.commit(); // done
 	        }
 
 			// now query, TODO: ordering and filtering /search can only be done on the COMPLETE set of rows.. not the subset returning
-			criteria = hsm.getSession().createCriteria(LocalMessage.class);
+			Criteria criteria = hsm.getSession().createCriteria(LocalMessage.class);
 			criteria.add(Restrictions.eq("folder", folder.toUpperCase()));
 			criteria.add(Restrictions.eq("account", as.getAccount().getId()));
-			
-			
 			criteria.addOrder(Order.desc("sentDate"));
 			
 			//criteria.setFirstResult(start).setMaxResults((end+1)-start);

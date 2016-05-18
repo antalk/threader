@@ -17,6 +17,10 @@ public class Folder extends AbstractIdEntity {
 	private Integer unreadMsgs;
 	private Boolean hasChilds;
 	
+	//imap specific fields
+	private Long uidValidity;
+	
+	
 	@OneToOne(optional=true)
 	public Folder getParent() {
 		return parent;
@@ -72,29 +76,19 @@ public class Folder extends AbstractIdEntity {
 	public void setHasChilds(Boolean hasChilds) {
 		this.hasChilds = hasChilds;
 	}
-
-	/**
-	 * Constructs a <code>String</code> with all attributes
-	 * in name = value format.
-	 *
-	 * @return a <code>String</code> representation 
-	 * of this object.
-	 */
-	public String toString()
-	{
-	    final String TAB = "    ";
-	    
-	    String retValue = "";
-	    
-	    retValue = "Folder ( "
-	        + super.toString() + TAB
-	        + "parent = " + this.parent + TAB
-	        + "account = " + this.account + TAB
-	        + "name = " + this.name + TAB
-	        + "hasChilds = " + this.hasChilds + TAB
-	        + " )";
 	
-	    return retValue;
+	public Long getUidValidity() {
+		return uidValidity;
+	}
+
+	public void setUidValidity(Long uidValidity) {
+		this.uidValidity = uidValidity;
+	}
+
+	@Override
+	public String toString() {
+		return "Folder [parent=" + parent + ", account=" + account + ", name=" + name + ", label=" + label
+				+ ", unreadMsgs=" + unreadMsgs + ", hasChilds=" + hasChilds + ", uidValidity=" + uidValidity + "]";
 	}
 
 
