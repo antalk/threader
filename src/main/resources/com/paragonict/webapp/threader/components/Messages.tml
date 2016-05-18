@@ -17,15 +17,32 @@
 		      			<t:eventlink t:event="reloadmessages" t:zone="^">
 							<button class="btn btn-default" title="Reload messages from server"><span class="glyphicon glyphicon-refresh" ></span></button>
 						</t:eventlink>
+						<t:eventlink t:event="deletemessages" t:zone="^">
+							<button class="btn btn-default" title="delete_message"><span class="glyphicon glyphicon-trash" ></span></button>
+						</t:eventlink>
 		      		</div>
 		      	</div>
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
-				  <t:grid t:id="messageGrid" source="messageSource" include="fromAdr,sentDate,subject" row="message"  zone="messageZone">
-				  	<p:subjectCell>
-				  		<t:if test="isDraftFolder">
-					  		<t:tapisser.Modal t:event="composeMessage" t:context="message.uid" large="true">edit draft</t:tapisser.Modal>
+		     	  <t:grid t:id="messageGrid" source="messageSource" include="prop:columns" add="check,address" reorder="check,address" row="message" zone="messageZone" class="table table-hover" >  
+				  	<p:checkHeader>
+				  		<span class="glyphicon glyphicon-check" ></span>
+				  	</p:checkHeader>
+				  	<p:addressHeader>
+				  		${headerAddress}
+				  	</p:addressHeader>
+				  	
+				  	<p:checkCell>
+				  		<t:form>
+				  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.UID"/>
+				  		</t:form> 
+				  	</p:checkCell>
+				  	<p:addressCell>
+				  		<!--  either from or to address here -->
+				  		${fromortoAddress}<br/>
+				  		<t:if test="isOutGoing">
+					  		<t:tapisser.Modal t:event="composeMessage" t:context="message.uid" large="true">${subject}</t:tapisser.Modal>
 				  			<p:else>
 				  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.UID">
 						  			<t:if test="messageRead">
@@ -37,7 +54,8 @@
 						  		</t:eventlink>
 				  			</p:else>
 				  		</t:if>
-				  	</p:subjectCell>
+				  		
+				  	</p:addressCell>
 				  	<p:sentDateCell>
 				  		${messageDate}
 				  	</p:sentDateCell>

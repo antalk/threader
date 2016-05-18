@@ -137,11 +137,25 @@ Tapestry.Initializer.updateZoneOnEvent = function (eventName, element, zoneId, u
 };
 
 
-function selectFolder(id) {
+function selectFolder(id,nrofunreadmsgs) {
 	// first remove old selected folder
 	var f = $('folderzone').select('.selected')[0]; //#folder'+name).innerHTML='<b>'+name+'</b>';
 	f.removeClassName('selected');
 	f.addClassName('notselected');
-	$('folderzone').select('#'+id)[0].addClassName('selected');
+	var folderelement = $('folderzone').select('#'+id)[0];
+	folderelement.addClassName('selected');
+	// also update the unread msgs number
+	if (nrofunreadmsgs) {
+		folderelement.parentNode.nextSibling.update(nrofunreadmsgs);
+	}
+	
 }
 
+function renderAppErrors(errList) {
+	var alertsDiv = $('appAlerts');
+	var alerts = alertsDiv.down('div.alert');
+    for (var i= 0; i < errList.length; i++) {
+    	alerts.update(alerts.textContent + errList[i] + '<br/>');
+    }
+	alertsDiv.toggle(true);
+}

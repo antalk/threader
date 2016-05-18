@@ -3,23 +3,33 @@
       xmlns:p="tapestry:parameter">
       
       <t:if test="messageSelected">
-      	<t:ProgressiveDisplay/>
+   			<t:ProgressiveDisplay t:id="loadMessage"/>
       	<p:else>
       		No message selected
       	</p:else>
       </t:if>
       
       <t:block t:id="contentBlock">
-      <t:if test="message">
+      	<t:if test="message">
       	<div class="panel">
       		<div class="panel-heading bg-primary">
       			<div class="pull-left">
 		      		<div class="btn-group">
-		      			<t:tapisser.Modal t:event="reply" large="true">
-			  				<button type="button" class="btn btn-default">Reply</button>
-			  			</t:tapisser.Modal>
-			  			<button type="button" class="btn btn-default">ReplyAll</button>
-			  			<button type="button" class="btn btn-default">Forward</button>
+		      		
+		      			<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		      				<span class="glyphicon glyphicon-share-alt"/>
+		      			</button>
+		      			<ul class="dropdown-menu">
+		      				<li>
+		      					<t:tapisser.Modal t:event="reply" large="true">Reply</t:tapisser.Modal>
+		      				</li>
+		      				<li>
+		      					<t:tapisser.Modal t:event="replyall" large="true">ReplyAll</t:tapisser.Modal>
+		      				</li>
+		      				<li>
+		      					<t:tapisser.Modal t:event="forward" large="true">Forward</t:tapisser.Modal>
+		      				</li>
+		      			</ul>
 			  			<t:if test="messageread">
 			  				<t:eventlink t:event="markasunread" t:zone="^">
 			  					<button type="button" class="btn btn-default">Mark as unread</button>
@@ -42,19 +52,18 @@
 				<div class="clearfix"/>
 			</div>
 			<div class="panel-body">
-      			<t:beandisplay object="message" include="subject" />
+				<h4>${message.subject}<br/><small>${message.toAdr}</small></h4>
       		</div>
       	</div>
 	   	<div class="full-height">
-	   		<t:outputraw value="messagecontent"/>
+	   		<t:ProgressiveDisplay t:id="loadMessageContent" initial="Loading message...">
+	   			<t:outputraw value="messagecontent"/>
+		   	</t:ProgressiveDisplay>
 	   	<!-- 
 		   	<iframe src="app/messagecontent" width="100%" height="100%" frameborder="0" scrolling="auto"/>
 		   	 -->
 		</div>
-	   	<p:else>
-	   		Message does not exist
-	   	</p:else> 
-	  </t:if>
+		</t:if>
 	 </t:block>
 	 
 	 <t:block t:id="messageViewBlock">
@@ -67,7 +76,5 @@
 	      </div>
 	 </t:block>
 	 
-	<t:block t:id="composeBlock">
-		<t:MailComposer />
-	</t:block>
+	 
 </html>

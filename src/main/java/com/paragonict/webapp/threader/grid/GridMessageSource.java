@@ -23,7 +23,7 @@ public class GridMessageSource implements GridDataSource {
 	public GridMessageSource(final IMailService ms,final String folder) throws MessagingException {
 		_ms = ms;
 		_folder = folder;
-		_nrOfRows = _ms.getNrOfMessages(folder);// fail fast..
+		_nrOfRows = _ms.getNrOfMessages(folder);// fail fast..	
 	}
 	
 

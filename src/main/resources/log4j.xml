@@ -32,7 +32,7 @@
 	</appender>
 
 	<category name="com.paragonict.webapp.threader">
-    	<priority value="INFO"/>
+    	<priority value="DEBUG"/>
    	</category>
 
 

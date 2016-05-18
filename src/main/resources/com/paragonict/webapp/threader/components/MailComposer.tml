@@ -10,35 +10,35 @@
 		<h4 class="modal-title">Compose Message</h4>
 	</div>
 	<div class="modal-body">
-		<t:zone t:id="maileditzone" id="maileditzone">
-			<t:beaneditform t:id="mailEditor" object="msg" add="content" submitlabel="send"
-				reorder="fromAdr,toAdr,ccAdr,bccAdr,subject,content" exclude="account,folder,sentDate,uid" t:mixins="tapisser/bootstrap" zone="^">
-				<p:FromAdr>
-					<label>From</label>
-					<t:textfield value="msg.fromAdr" readonly="readonly"/>
-				</p:FromAdr>
-				<p:ToAdr>
-					<label>To</label>
-					<t:tapisser.Chosen t:id="addressselect" id="addressselect" multiple="true" model="addressbookmodel" value="msg.toAdr" createOption="true" fireChangeEvent="true" multiSeparator="literal:,"/>
-		      	</p:ToAdr>
-				<p:cc>
-					<label>CC</label>
-	      			cc
-	      		</p:cc>
-				<p:bcc>
-					<label>BCC</label>
-	      			bcc
-	      		</p:bcc>
-	      		<p:content>
-	      			<label>Content</label>
-	      			<t:ck.Editor value="content" toolbarSet="Basic" width="100%"/>
-	      		</p:content>
-	
-			</t:beaneditform>
+		<t:zone t:id="maileditzone" id="maileditzone" update="none">
+			<t:form t:id="mailEditForm" zone="^">
+				<t:errors/>
+				<t:beandisplay object="msg" add="content" 
+					reorder="fromAdr,toAdr,ccAdr,bccAdr,subject,content" exclude="account,folder,sentDate,uid" t:mixins="tapisser/bootstrap">
+					<p:FromAdr>
+						<t:textfield value="msg.fromAdr" readonly="readonly"/>
+					</p:FromAdr>
+					<p:ToAdr>
+						<t:tapisser.Chosen t:id="addressselect" id="addressselect" multiple="true" model="addressbookmodel" value="recipientAddresses" createOption="true" fireChangeEvent="true" multiSeparator="literal:;"/>
+			      	</p:ToAdr>
+					<p:cc>
+						<t:textfield value="msg.ccAdr" />
+		      		</p:cc>
+					<p:bcc>
+			   			<t:textfield value="msg.bccAdr" />
+		      		</p:bcc>
+		      		<p:subject>
+		      			<t:textfield value="msg.subject" />
+		      		</p:subject>
+		      		<p:content>
+						<t:ck.Editor value="content" toolbarSet="Basic" width="100%"/>
+		      		</p:content>
+		
+				</t:beandisplay>
+				<t:submit t:id="sendButton" class="btn btn-primary" value="Send"/>
+				<t:submit t:id="saveButton" class="btn btn-default pull-right" value="Save as draft"/>
+			</t:form>
 		</t:zone>
-	</div>
-	<div class="modal-footer">
-		<button type="button" class="btn btn-primary">Save as draft</button>
 	</div>
 
 </html>

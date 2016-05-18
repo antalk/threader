@@ -50,3 +50,11 @@ code {
 .t-error {
 	
 }
+
+.fixed {
+	table-layout: fixed;
+}
+
+th .check {
+	width: 10px;
+}

@@ -57,7 +57,7 @@
   						</div>
 						<div class="form-group">
     						<label for="smtpport">Outgoing port</label>
-    						<t:textfield t:value="account.smtpport" class="form-control" id="smtpport" placeholder="Enter port number"/>
+    						<t:textfield t:value="account.smtpport" class="form-control" id="smtpport" placeholder="Enter port number, 25 is the default	"/>
   						</div>
   						 <div class="checkbox">
     						<label for="smtpauth">

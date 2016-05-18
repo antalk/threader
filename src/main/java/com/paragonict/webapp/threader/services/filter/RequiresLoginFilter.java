@@ -36,7 +36,7 @@ public class RequiresLoginFilter implements ComponentRequestFilter {
 			ComponentRequestHandler handler) throws IOException {
 		
 		System.err.println("handle comp event "+parameters.getEventType());
-		
+
 		if (_acs.isLoggedIn()) {
 			handler.handleComponentEvent(parameters);	
 		} else {

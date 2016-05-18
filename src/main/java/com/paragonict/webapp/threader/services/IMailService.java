@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Part;
 
 import org.apache.tapestry5.grid.SortConstraint;
 
@@ -28,14 +27,27 @@ public interface IMailService {
 	 * Get the (cached) {@link Message} for {@link LocalMessage}
 	 * 
 	 * @param message
-	 * @return
-	 * @throws MessagingException if the {@link Message} does not exist anymore.
+	 * @return null if the message was not on the mailserver anymore !
+	 * 
 	 */
 	public Message getMailMessage(final LocalMessage message) throws MessagingException;
-		
+	
 	public SMTPMessage createMessage();
 	
-	public String getMessageContent(Part p) throws IOException,MessagingException;
+	public String getMessageContent(final LocalMessage message) throws IOException,MessagingException;
 	
 	public boolean isMessageRead(final LocalMessage message) throws MessagingException;
+	
+	/**
+	 * Tries to delete the mail message on the mail server ( if it exists)
+	 * also removes the messages from the local db, if exist
+	 * And updates the localcache.
+	 * 
+	 * @param UID's
+	 * @return true or false
+	 */
+	public boolean deleteMailMessage(final String... UIDs) throws MessagingException;
+	
+	
+
 }

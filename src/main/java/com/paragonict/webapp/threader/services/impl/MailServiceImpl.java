@@ -1,38 +1,40 @@
 package com.paragonict.webapp.threader.services.impl;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
-import javax.mail.Authenticator;
 import javax.mail.FetchProfile;
+import javax.mail.Flags;
+import javax.mail.Flags.Flag;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Part;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
 import javax.mail.UIDFolder;
-import javax.mail.Flags.Flag;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.mail.util.MimeMessageParser;
 import org.apache.tapestry5.grid.SortConstraint;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
+import org.apache.tapestry5.ioc.LoggerSource;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.internal.util.TapestryException;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
 
 import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.entities.Account.PROTOCOL;
 import com.paragonict.webapp.threader.entities.Folder;
 import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IAccountService;
+import com.paragonict.webapp.threader.services.IApplicationError;
 import com.paragonict.webapp.threader.services.IMailService;
+import com.paragonict.webapp.threader.services.IMailSession;
 import com.paragonict.webapp.threader.services.IMailStore;
 import com.sun.mail.imap.IMAPFolder;
 import com.sun.mail.pop3.POP3Folder;
@@ -49,40 +51,41 @@ import net.sf.ehcache.Element;
  */
 public class MailServiceImpl implements IMailService {
 	
-	private Properties systemProperties  = System.getProperties();
-	
 	@Inject
 	private HibernateSessionManager hsm;
 	
 	@Inject
 	private IAccountService as;
 	
+	@Inject
+	private IMailSession session;
+	
 	// per thread object,closes open folders after request
 	@Inject
 	private IMailStore store;
+	
+	@Inject
+	private LoggerSource logSource;
+	
+	@Inject
+	private IApplicationError appErrors;
 
 	@Inject
 	@Symbol(value=Constants.SYMBOL_MAIL_DEBUG)
 	private boolean debug;
 	
-	private Session _mailSession;
 	
 	private CacheManager _manager;
+	
+	private Logger logger;
 	
 	
 	@PostInjection
 	public void init() {
-		// creates a session usable for all clients
-		_mailSession =  Session.getInstance(systemProperties,new Authenticator() {
-        	@Override
-        	protected PasswordAuthentication getPasswordAuthentication() {
-        		return new PasswordAuthentication(as.getAccount().getAccountName(), as.getAccount().getPassword());
-        	}
-         });
-		if (debug) _mailSession.setDebug(true);
 		_manager = CacheManager.newInstance(this.getClass().getResourceAsStream("/mailcache.xml"));
-		
+		logger = logSource.getLogger(this.getClass());
 	}
+	
 	
 	public Folder getFolders(boolean renew) throws MessagingException {
 		Folder rootFolder;
@@ -99,7 +102,7 @@ public class MailServiceImpl implements IMailService {
 				
 				//javax.mail.Folder[] folders = mailSession.getStore().getDefaultFolder().list("%");
 				
-				javax.mail.Folder root = store.getStore(_mailSession).getDefaultFolder();
+				javax.mail.Folder root = store.getDefaultFolder();
 				System.err.println("parent :"+ root);
 				
 				rootFolder = new Folder();
@@ -177,7 +180,8 @@ public class MailServiceImpl implements IMailService {
 			// deletes will be immediately
 			// and remote deletes will show up when you try to open the message.
 			Criteria criteria = hsm.getSession().createCriteria(LocalMessage.class);
-			//applyAdditionalConstraints(criteria);
+			criteria.add(Restrictions.eq("account", as.getAccount().getId())); // how about only YOUR messages
+			criteria.add(Restrictions.eq("folder", folder));
 	        criteria.setProjection(Projections.rowCount());
 	        Number nrofDBRows = (Number)criteria.uniqueResult();
 	        
@@ -193,7 +197,7 @@ public class MailServiceImpl implements IMailService {
 	        	int nrToRetrieve = mailTotal-nrofDBRows.intValue();
 	        	
 	        	System.err.println("GET MSGS" + System.currentTimeMillis());
-				javax.mail.Folder f = store.getStore(_mailSession).getFolder(folder);
+				javax.mail.Folder f = store.getFolder(folder);
 				if (!f.isOpen()) {
 					f.open(javax.mail.Folder.READ_ONLY); // read only, RW will be done per individual message
 				}
@@ -206,16 +210,25 @@ public class MailServiceImpl implements IMailService {
 				
 				// store by uid in DB
 				for (Message m: msgs) {
+					logger.debug("Adding new localmessage from {} ",m);
+					
 					hsm.getSession().save(new LocalMessage(m, as.getAccount()));
 				}
 				hsm.commit(); // done
 	        }
 
-			// now query, TODO: ordering and filtering
+			// now query, TODO: ordering and filtering /search can only be done on the COMPLETE set of rows.. not the subset returning
 			criteria = hsm.getSession().createCriteria(LocalMessage.class);
 			criteria.add(Restrictions.eq("folder", folder.toUpperCase()));
-			criteria.setFirstResult(start).setMaxResults((end+1)-start);
-			return criteria.list();
+			criteria.add(Restrictions.eq("account", as.getAccount().getId()));
+			
+			
+			criteria.addOrder(Order.desc("sentDate"));
+			
+			//criteria.setFirstResult(start).setMaxResults((end+1)-start);
+			
+			
+			return criteria.list().subList(start, end+1);
 		}
 		return Collections.emptyList();
 	}
@@ -230,12 +243,15 @@ public class MailServiceImpl implements IMailService {
 				as.getAccount().getProtocol().equals(PROTOCOL.pops)) {
 			if (!folder.equalsIgnoreCase("INBOX")) {
 				// get nr of message locally stored only
-				return hsm.getSession().createCriteria(LocalMessage.class).add(Restrictions.eq("folder", folder.toUpperCase())).list().size();
+				return ((Long) hsm.getSession().createCriteria(LocalMessage.class)
+						.add(Restrictions.eq("folder", folder.toUpperCase()))
+						.add(Restrictions.eq("account", as.getAccount().getId()))
+						.setProjection(Projections.rowCount()).uniqueResult()).intValue();
 			}
 		}
 		// IMAP(S) or INBOX
 		if (folder != null) {
-			javax.mail.Folder f  = store.getStore(_mailSession).getFolder(folder);
+			javax.mail.Folder f  = store.getFolder(folder);
 			f.open(javax.mail.Folder.READ_ONLY);
 			return f.getMessageCount();
 		}
@@ -246,7 +262,7 @@ public class MailServiceImpl implements IMailService {
 
 	@Override
 	public SMTPMessage createMessage() {
-		return new SMTPMessage(_mailSession);
+		return new SMTPMessage(session.getSession());
 	}
 	
 	@Override
@@ -256,12 +272,17 @@ public class MailServiceImpl implements IMailService {
 		
 		final Cache myCache = getCache(localMsg);
 		
+		logger.trace("Checking cache for UID {}", UID);
 		if (myCache.isKeyInCache(UID)) {
-			final Element e =  myCache.get(UID);
+			logger.trace("Key is in cache trying to fetch item quietly for UID {} ",UID);
+			final Element e =  myCache.getQuiet(UID);
 			if (e!=null) {
+				logger.trace("Element {} is in cache, fetch objectValue",e);
+					
 				final Message msg = (Message) e.getObjectValue();
 				final javax.mail.Folder f = msg.getFolder();
 				if (!f.isOpen()) {
+					logger.debug("folder {} is not open",f);
 					store.registerFolder(f);
 					f.open(javax.mail.Folder.READ_WRITE);
 				}
@@ -270,7 +291,7 @@ public class MailServiceImpl implements IMailService {
 		}
 		
 		// the folder NEEDS to be open when accessing the retrieved message.. even if it lives in cache!
-		javax.mail.Folder f = store.getStore(_mailSession).getFolder(folderName);
+		javax.mail.Folder f = store.getFolder(folderName);
 		if (!f.isOpen()) {
 			f.open(javax.mail.Folder.READ_WRITE); // read write otherwise we cant set flags the referenced message object..
 		}
@@ -296,63 +317,94 @@ public class MailServiceImpl implements IMailService {
 			}
 		}
 		if (message == null) {
-			throw new MessagingException("Message with UID ["+UID+"] was not on the server anymore !");
-			
+			appErrors.addApplicationError("Message was not on the server anymore");
 			// TODO:/ delete this LocalMessage from DB?
+			
+			hsm.getSession().delete(localMsg);
+			hsm.commit();
+			
+		} else {
+			// do not put null items in the cache
+			myCache.put(new Element(localMsg.getUID(), message));
 		}
-		myCache.put(new Element(localMsg.getUID(), message));
 		return message;
 	}
 
 	@Override
 	public boolean isMessageRead(LocalMessage message) throws MessagingException {
 		if (isRemoteFolder(message.getFolder())) {
-			return getMailMessage(message).getFlags().contains(Flag.SEEN);	
+			final Message orgMsg = getMailMessage(message);
+			if (orgMsg!=null) {
+				return orgMsg.getFlags().contains(Flag.SEEN);	
+			}
+			appErrors.addApplicationError("Message is not on server anymore");
 		}
 		return false; // cant determine.
 		
 	}
 
+	/* TODO: make this transactional and more robust..*/
+	@Override
+	public boolean deleteMailMessage(final String... UIDs) throws MessagingException {
+		boolean result = true;
+		if (UIDs.length > 0) {
+			
+			
+			LocalMessage lm = null;
+			final List<Message> remoteMsgsToDelete = new ArrayList<Message>();
+			
+			for (String UID : UIDs) {
+				try {
+					lm = getLocalMessage(UID);
+					if (isRemoteFolder(lm.getFolder())) {
+						remoteMsgsToDelete.add(getMailMessage(lm));
+					}
+					// remove from db also
+					hsm.getSession().delete(lm);
+				} catch (Exception e) {
+					// TODO:
+					result = false;
+				}
+			}
+			
+			if (!remoteMsgsToDelete.isEmpty()) {
+				
+				final Flags deleted = new Flags(Flag.DELETED);
+				try {
+					// the first message contains the affected folder.
+					final javax.mail.Folder affectedFolder = remoteMsgsToDelete.get(0).getFolder();
+					
+					affectedFolder.setFlags(remoteMsgsToDelete.toArray(new Message[]{}), deleted,true);
+					affectedFolder. close(true);
+				 
+					hsm.commit();
+				} catch (MessagingException e) {
+					// TODO try saving my messages???
+					e.printStackTrace();
+				}
+			}
+		}		
+		return result;
+	}
 	
 	/**
      * Return the primary text content of the message.
      * Copied from the interwebs
      */
-	public String getMessageContent(Part p) throws IOException,MessagingException {
-	    if (p.isMimeType("text/*")) {
-            String s = (String)p.getContent();
-            //textIsHtml = p.isMimeType("text/html");
-            return s;
-        }
-
-        if (p.isMimeType("multipart/alternative")) {
-            // prefer html text over plain text
-            Multipart mp = (Multipart)p.getContent();
-            String text = null;
-            for (int i = 0; i < mp.getCount(); i++) {
-                Part bp = mp.getBodyPart(i);
-                if (bp.isMimeType("text/plain")) {
-                    if (text == null)
-                        text = getMessageContent(bp);
-                    continue;
-                } else if (bp.isMimeType("text/html")) {
-                    String s = getMessageContent(bp);
-                    if (s != null)
-                        return s;
-                } else {
-                    return getMessageContent(bp);
-                }
-            }
-            return text;
-        } else if (p.isMimeType("multipart/*")) {
-            Multipart mp = (Multipart)p.getContent();
-            for (int i = 0; i < mp.getCount(); i++) {
-                String s = getMessageContent(mp.getBodyPart(i));
-                if (s != null)
-                    return s;
-            }
-        }
-        return null;
+	public String getMessageContent(final LocalMessage m) {
+		try {
+			final MimeMessageParser mmp = new MimeMessageParser((MimeMessage) getMailMessage(m));
+			mmp.parse();
+			if (mmp.hasHtmlContent()) {
+				return mmp.getHtmlContent();
+			} else if (mmp.hasPlainContent()) {
+				return mmp.getPlainContent();
+			}
+			return "Could not parse message's contents";
+		} catch (Exception e) {
+			logger.error("unable to parse MimeMessage ",e);
+			return "Unable to display";
+		}
     }
 
 	//----PRIVATE METHODS -----///

@@ -53,7 +53,7 @@ public class LocalMessage implements Serializable {
 		} else {
 			UID = "" + ((IMAPFolder)message.getFolder()).getUID(message);
 		}
-		folder = message.getFolder().getName();
+		folder = message.getFolder().getFullName();
 		fromAdr = Utils.toString(message.getFrom());
 		toAdr = Utils.toString(message.getRecipients(RecipientType.TO)[0]);
 		sentDate = message.getSentDate();

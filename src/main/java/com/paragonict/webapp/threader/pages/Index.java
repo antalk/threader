@@ -15,23 +15,23 @@ import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.corelib.components.Form;
 import org.apache.tapestry5.corelib.components.Zone;
 import org.apache.tapestry5.ioc.annotations.Inject;
-import org.apache.tapestry5.services.Request;
 import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.hibernate.criterion.Restrictions;
 
-import com.paragonict.webapp.threader.base.AppPage;
+import com.paragonict.webapp.threader.base.AuthenticatedPage;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Account;
 import com.paragonict.webapp.threader.entities.Folder;
+import com.paragonict.webapp.threader.services.IMailStore;
 
 /**
  * Start page of application threader.
  */
-public class Index extends AppPage {
+public class Index extends AuthenticatedPage {
 	
 	@Inject
-	private Request req;
+	private IMailStore ms;
 	
 	@Inject
 	private AlertManager am;
@@ -86,21 +86,36 @@ public class Index extends AppPage {
 	
 	@OnEvent(value="createAccount")
 	private Object getAccountPage() {
-		return getPrls().createPageRenderLink(AccountPage.class);
+		return getPrls().createPageRenderLinkWithContext(AccountPage.class,"create");
 	}
 
 	@OnEvent(value="getFolderContent")
 	private void getFolderContents(final Long id) {
 		final Folder selectedFolder = (Folder) getHsm().getSession().load(Folder.class, id);
+		
+		// refresh the nr of unread msgs ONLY if not a POP3 folder
+		if (selectedFolder.getUnreadMsgs() != -1) {
+			try {
+				selectedFolder.setUnreadMsgs(ms.getFolder(selectedFolder.getName()).getUnreadMessageCount());
+				getHsm().getSession().update(selectedFolder);
+				getHsm().commit();
+			} catch (MessagingException e) {
+				// oops
+				getLogger().warn("Unable to update nr of unread msgs for folder ["+selectedFolder+"] , due to "+ e.getMessage());
+			}
+		} else {
+			selectedFolder.setUnreadMsgs(0);
+		}
 		getSso().putValue(SESSION_ATTRS.SELECTED_FOLDER, selectedFolder.getName());
 		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
-		getArr().addRender(messageZone).addCallback(new JavaScriptCallback() {
+		getArr().addRender(messageZone).addRender(contentZone).addCallback(new JavaScriptCallback() {
 			
 			@Override
 			public void run(JavaScriptSupport javascriptSupport) {
-				javascriptSupport.addScript("selectFolder(%s);",new Object[] {selectedFolder.getId()});
+				javascriptSupport.addScript("selectFolder(%d,%d);",new Object[] {selectedFolder.getId(),selectedFolder.getUnreadMsgs()});
 			}
 		});
+		
 	}
 	
 	@OnEvent(value="composeMessage")

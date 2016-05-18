@@ -8,10 +8,10 @@ import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.hibernate.criterion.Restrictions;
 
-import com.paragonict.webapp.threader.base.AppPage;
+import com.paragonict.webapp.threader.base.AuthenticatedPage;
 import com.paragonict.webapp.threader.entities.Contact;
 
-public class Contacts extends AppPage {
+public class Contacts extends AuthenticatedPage {
 	
 	@Inject
 	private AlertManager am;
@@ -22,6 +22,11 @@ public class Contacts extends AppPage {
 	public List<Contact> getContacts() {
 		return getHsm().getSession().createCriteria(Contact.class).add(Restrictions.eq("owner", getAs().getAccount())).list();
 	}
+	
+	public Class<?> getRowType() {
+		return Contact.class;
+	}
+	
 	
 	@OnEvent(value="delete")
 	private void deleteContact(Long id) {

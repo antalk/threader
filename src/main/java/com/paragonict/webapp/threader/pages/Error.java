@@ -29,8 +29,8 @@ public class Error implements ExceptionReporter  {
 
 	@Override
 	public void reportException(Throwable exception) {
-		// clear session storage (except the logged in user)..
-		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER,SESSION_ATTRS.SELECTED_MSG_UID);
+		// clear session storage (except the logged in user/admin)..
+		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER,SESSION_ATTRS.SELECTED_MSG_UID,SESSION_ATTRS.DRAFT_UID);
 		rootexception = exception;
 	}
 	
@@ -39,7 +39,7 @@ public class Error implements ExceptionReporter  {
 		
 		final MessagingException me = org.apache.tapestry5.ioc.util.ExceptionUtils.findCause(e, MessagingException.class);
 		if (me !=null) {
-			return "An communication error occured: ["+ e.getMessage()+"]. Please retry or re-configure your email account";
+			return "An communication error occured: ["+ e.getMessage()+"]. Please retry or re-configure your email account or check your (internet) connection.";
 		}
 		while (e.getCause() != null) {
 			e = e.getCause();

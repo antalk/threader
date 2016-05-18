@@ -4,9 +4,18 @@
 
 <!-- Begin page content -->
     <div class="container-fluid">
-      <h1>Account</h1>
-     	<t:accountEditor/>
-	</div>      
+    	<t:delegate to="activeblock"/>
+ 	</div>      
 
-      
+	<t:block t:id="create">
+		<h1>Create Account</h1>
+     	<t:accountEditor/>
+	</t:block>
+	
+	<t:block t:id="edit">
+		<h1>Edit Account</h1>
+     	<t:accountEditor/>
+	
+	</t:block>
+    
 </html>

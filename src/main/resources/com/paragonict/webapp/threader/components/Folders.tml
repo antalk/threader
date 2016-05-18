@@ -32,6 +32,9 @@
 						</t:if>
 						<t:if test="hasUnreadMsgs">
 							<span class="label label-default">${currentFolder.unreadmsgs}</span>
+							<p:else>
+								<span class="label label-default"/>
+							</p:else>
 						</t:if>
 					</p:label>
 				</t:tree>

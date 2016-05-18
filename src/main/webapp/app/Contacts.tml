@@ -9,10 +9,10 @@
     		<t:alerts/>
     	</div>
 	
-    	<t:ic-t5.Datatable source="contacts" searchColumns="name,mailAddress" add="action" row="contact">
+    	<t:tapisser.Datatable source="contacts" searchColumns="name,mailAddress" add="action" row="contact" rowType="rowType">
     		<p:actionCell>
-    			<t:eventlink t:event="delete" t:mixins="ic-t5/Confirm" t:context="contact.id"><span class="glyphicon glyphicon-remove"></span></t:eventlink>
+    			<t:eventlink t:event="delete" t:mixins="tapisser/Confirm" t:context="contact.id"><span class="glyphicon glyphicon-remove"></span></t:eventlink>
     		</p:actionCell>
-    	</t:ic-t5.Datatable>	
+    	</t:tapisser.Datatable>	
     </div>
 </html>

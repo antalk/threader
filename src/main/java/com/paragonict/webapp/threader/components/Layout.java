@@ -2,6 +2,7 @@ package com.paragonict.webapp.threader.components;
 
 
 import org.apache.tapestry5.ComponentResources;
+import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Import;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.SessionState;
@@ -32,7 +33,13 @@ public class Layout {
 		return Index.class;
 	}
 	
-	public String getLogoutenabled() {
+	@Cached
+	public boolean getIsLoggedIn() {
+		return as.isLoggedIn();
+	}
+	
+	@Cached
+	public String getLinkEnabled() {
 		return (as.isLoggedIn()?"enabled":"disabled");
 	}
 	

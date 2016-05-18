@@ -1,13 +1,11 @@
 package com.paragonict.webapp.threader.components;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.ValueEncoder;
 import org.apache.tapestry5.alerts.AlertManager;

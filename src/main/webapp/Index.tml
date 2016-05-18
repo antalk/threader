@@ -14,6 +14,12 @@
     	</div>
 	      
    	      <div class="panel">
+   	      	  <!-- show recoverable app errors once -->
+   	      	 <div id="appAlerts" style="display: none;">
+	   	      	 <div class="alert alert-danger" role="alert">
+	   	      	 </div>
+   	      	 </div>
+   	      	  
 			  <div class="col-md-3 scrollable">
 			  	<t:zone t:id="folderzone" id="folderzone">
 			  		<t:Folders/>
@@ -40,6 +46,7 @@
 			        <h4 class="modal-title">Login</h4>
 			      </div>
 			      <div class="modal-body">
+			      	<t:alerts/>
 			        <p>Login or create an account</p>
 			        	<t:form t:id="loginform" t:mixins="tapisser/Bootstrap">
 				        	<t:errors/>

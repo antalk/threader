@@ -7,7 +7,7 @@ import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS
 import com.paragonict.webapp.threader.pages.Index;
 import com.paragonict.webapp.threader.services.IAccountService;
 
-public abstract class AppPage extends BasicPage {
+public abstract class AuthenticatedPage extends BasicPage {
 	
 	@Inject
 	private IAccountService as;
