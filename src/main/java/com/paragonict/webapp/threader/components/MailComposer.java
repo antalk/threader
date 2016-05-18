@@ -13,6 +13,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage.RecipientType;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.tapestry5.ComponentResources;
@@ -38,7 +39,6 @@ import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.hibernate.criterion.Restrictions;
-import org.webbitserver.helpers.Base64;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
@@ -127,7 +127,7 @@ public class MailComposer {
 			if (dc != null) {
 				try {
 					if (StringUtils.isNotEmpty(dc.getContent())) {
-						content = new String(Base64.decode(dc.getContent()),"UTF-8");
+						content = new String(Base64.decodeBase64(dc.getContent()),"UTF-8");
 					} else {
 						content = "";
 					}
@@ -274,7 +274,7 @@ public class MailComposer {
 			}
 			if (StringUtils.isNotEmpty(content)) {
 				try {
-					dc.setContent(Base64.encode(content.getBytes("UTF-8")));
+					dc.setContent(Base64.encodeBase64String(content.getBytes("UTF-8")));
 				} catch (UnsupportedEncodingException e) {
 					// no UTF-8 ? not gonna happen..
 				}

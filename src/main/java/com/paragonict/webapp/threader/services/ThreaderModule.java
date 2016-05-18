@@ -11,6 +11,7 @@ import org.apache.tapestry5.ioc.ScopeConstants;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.annotations.Startup;
 import org.apache.tapestry5.ioc.annotations.SubModule;
+import org.apache.tapestry5.json.JSONArray;
 import org.apache.tapestry5.services.ComponentRequestFilter;
 import org.apache.tapestry5.services.PartialMarkupRendererFilter;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
@@ -19,7 +20,6 @@ import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptStack;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.chenillekit.tapestry.core.ChenilleKitCoreModule;
-import org.json.JSONArray;
 
 import com.paragonict.tapisser.SymbolConstants;
 import com.paragonict.tapisser.services.TapisserModule;
