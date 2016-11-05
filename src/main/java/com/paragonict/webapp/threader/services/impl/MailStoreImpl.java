@@ -9,9 +9,12 @@ import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Store;
 
+import org.apache.commons.collections.ListUtils;
+import org.apache.tapestry5.ioc.Invokable;
 import org.apache.tapestry5.ioc.LoggerSource;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
+import org.apache.tapestry5.ioc.services.ParallelExecutor;
 import org.apache.tapestry5.ioc.services.PerthreadManager;
 import org.apache.tapestry5.ioc.services.ThreadCleanupListener;
 import org.slf4j.Logger;
@@ -42,6 +45,9 @@ public class MailStoreImpl implements IMailStore, ThreadCleanupListener {
 	@Inject
 	private LoggerSource logSource;
 	
+	@Inject
+	private ParallelExecutor executor;
+	
 	private Logger logger;
 	
 	private Map<String,Folder> requestedFolders;
@@ -62,11 +68,21 @@ public class MailStoreImpl implements IMailStore, ThreadCleanupListener {
 
 	}
 	
-	private void getStore() throws MessagingException {
+	private synchronized void getStore() throws MessagingException {
 		if (_delegate == null) {
-			_delegate = session.getSession().getStore(as.getAccount().getProtocol().name());
+			_delegate = session.getSession(as).getStore(as.getAccount().getProtocol().name());
+			logger.debug("Createing new store {} for thread {}",_delegate,Thread.currentThread().getId());
 			_delegate.connect(as.getAccount().getHost(),as.getAccount().getAccountName(),as.getAccount().getPassword());
+			logger.debug("Created new store (delegate) for this request");
 		}
+	}
+	
+	@Override
+	public Store getUnmanagedStore() throws MessagingException {
+		final Store store = session.getSession(as).getStore(as.getAccount().getProtocol().name());
+		store.connect(as.getAccount().getHost(),as.getAccount().getAccountName(),as.getAccount().getPassword());
+		return store;
+		
 	}
 	
 	public Folder getDefaultFolder() throws MessagingException {
@@ -88,77 +104,49 @@ public class MailStoreImpl implements IMailStore, ThreadCleanupListener {
 	}
 	
 	public void threadDidCleanup() {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Closing mailstore at end of request");
-		}
-		try {
-			getStore();
-			if (requestedFolders!=null) {// can be becoz of the closeStore methods... premature closing
-				for (Folder f: requestedFolders.values()) {
-					if (f.isOpen()) {
-						logger.debug("Closing folder {}" , f);
-						f.close(true); // expunge true...
-					}
-				}
-				requestedFolders = null;
-			}
-			if (cachedMessageFolders != null) {
-				for (Folder f: cachedMessageFolders) {
-					if (f.isOpen()) {
-						logger.debug("Closing (cached) folder {}", f);
-						f.close(true); // expunge true..
-					}
-				}
-				cachedMessageFolders = null;
-			}
-			
-			
-			if (_delegate != null) {
-				if (_delegate.isConnected()) {
-					logger.debug("Closing mailStore");
-					_delegate.close();
-				}
-			}
-			
-		} catch (MessagingException me) {
-			logger.error("Error closing mailStore: " + me.getMessage());
-			if (logger.isDebugEnabled()) {
-				me.printStackTrace();
-			}
-		}
+		logger.debug("Closing mailstore {} at end of thread {}",_delegate,Thread.currentThread().getId());
+		
+		executor.invoke(new StoreCloserThread(_delegate, ListUtils.union(cachedMessageFolders, new ArrayList(requestedFolders.values()))));
 		logger.debug("Time spend in mailstore is {} ", System.currentTimeMillis()-startTime);
+	}
+		
+	private class StoreCloserThread implements Invokable<Boolean> {
+		
+		private final Store store;
+		private final List<Folder> folders;
+		
+		public StoreCloserThread(final Store store,final List<Folder> foldersToClose) {
+			this.store  = store;
+			this.folders =foldersToClose;
+		}
+
+		@Override
+		public Boolean invoke() {
+			logger.debug("Closing store {} in different thread {}",store,Thread.currentThread().getId());
+			if (store != null) {
+				
+				folders.stream().filter(f -> f.isOpen()).forEach(f -> {
+					logger.debug("Closing folder {}", f);
+					try {
+						f.close(true);
+					} catch (MessagingException e) {
+						logger.error("Could not close folder due to {}",e.getMessage(),e);
+					} // expunge true..
+				});
+				
+				try {
+					if (store.isConnected()) {
+						store.close();
+					}
+				} catch (MessagingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			// we can return false in case of errors.. ? 
+			return true;
+		}
 		
 	}
 	
-	/**
-	private void setProperties(final Properties props) {
-		
-		props.put("mail.transport.protocol","smtp"); 
-		props.put("mail.smtp.auth", as.getAccount().getSmtpAuth().toString());
-		props.put("mail.smtp.host", as.getAccount().getSmtpHost());
-		props.put("mail.smtp.port", as.getAccount().getSmtpPort());
-		props.put("mail.smtp.starttls.enable", as.getAccount().getSmtpTLS().toString());
-		
-		props.put("mail."+as.getAccount().getProtocol().name()+".host", as.getAccount().getHost());
-		
-		switch (as.getAccount().getProtocol()) {
-			case imap:
-				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-				break;
-			case imaps:
-				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-				props.setProperty("mail.imap.starttls.enable", "true");
-			    props.setProperty("mail.imap.ssl.enable", "true");
-				break;
-			case pop3:
-				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-				break;
-			case pops:
-				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
-				break;
-			default:
-				break;
-		}
-	}
-	 **/
 }

@@ -9,7 +9,6 @@ import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ScopeConstants;
 import org.apache.tapestry5.ioc.ServiceBinder;
-import org.apache.tapestry5.ioc.annotations.Startup;
 import org.apache.tapestry5.ioc.annotations.SubModule;
 import org.apache.tapestry5.json.JSONArray;
 import org.apache.tapestry5.services.ComponentRequestFilter;
@@ -27,6 +26,7 @@ import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.services.filter.RequiresLoginFilter;
 import com.paragonict.webapp.threader.services.impl.AccountServiceImpl;
 import com.paragonict.webapp.threader.services.impl.ApplicationErrorImpl;
+import com.paragonict.webapp.threader.services.impl.MailFetcherImpl;
 import com.paragonict.webapp.threader.services.impl.MailServiceImpl;
 import com.paragonict.webapp.threader.services.impl.MailSessionImpl;
 import com.paragonict.webapp.threader.services.impl.MailStoreImpl;
@@ -43,6 +43,7 @@ public class ThreaderModule
     {
     	binder.bind(IMailSession.class,MailSessionImpl.class); // singleton
         binder.bind(IMailService.class,MailServiceImpl.class); // singleton
+        binder.bind(IMailFetcher.class,MailFetcherImpl.class); // singleton
         binder.bind(IMailStore.class,MailStoreImpl.class).scope(ScopeConstants.PERTHREAD);
         binder.bind(IAccountService.class,AccountServiceImpl.class).scope(ScopeConstants.PERTHREAD);
         binder.bind(IApplicationError.class,ApplicationErrorImpl.class).scope(ScopeConstants.PERTHREAD);
@@ -137,7 +138,6 @@ public class ThreaderModule
 		
 		@Override
 		public AjaxResponseRenderer addRender(String clientId, Object renderer) {
-			// also add a javascript callback
 			if (!appErrors.getApplicationErrors().isEmpty()) {
 				delegate.addCallback(new JavaScriptCallback() {
 					
@@ -184,12 +184,4 @@ public class ThreaderModule
 			return delegate.addCallback(callback);
 		}
 	};}
-    
-    
-    @Startup
-    public void doAfterStart(final IMailSession session) {
-    	// initialize the session
-    	session.getSession();
-    }
-    
 }

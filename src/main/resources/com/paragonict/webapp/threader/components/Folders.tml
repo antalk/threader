@@ -24,18 +24,19 @@
 							<t:eventlink t:event="getFolderContent" t:zone="^" t:context="currentFolder.id">
 								<div id="${currentFolder.id}" class="${folderSelected}">
 									${currentFolder.label}
+									<t:if test="hasUnreadMsgs">
+										<span class="label label-default">${currentFolder.unreadmsgs}</span>
+										<p:else>
+											<span class="label label-default"/>
+										</p:else>
+									</t:if>
 								</div>
 							</t:eventlink>
 							<p:else>
 								${currentFolder.label}
 							</p:else>
 						</t:if>
-						<t:if test="hasUnreadMsgs">
-							<span class="label label-default">${currentFolder.unreadmsgs}</span>
-							<p:else>
-								<span class="label label-default"/>
-							</p:else>
-						</t:if>
+						
 					</p:label>
 				</t:tree>
 			</div>

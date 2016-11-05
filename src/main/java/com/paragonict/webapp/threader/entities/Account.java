@@ -8,7 +8,7 @@ import javax.persistence.Enumerated;
 public class Account extends AbstractIdEntity {
 
 	public enum PROTOCOL {
-		pop3, imap, pops, imaps;
+		pop3, imap, pop3s, imaps;
 	}
 
 	/**

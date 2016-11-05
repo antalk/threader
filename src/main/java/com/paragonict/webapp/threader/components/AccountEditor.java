@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.tapestry5.ComponentEventCallback;
-import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.SelectModel;
 import org.apache.tapestry5.annotations.Cached;
@@ -19,20 +18,14 @@ import org.apache.tapestry5.internal.TapestryInternalUtils;
 import org.apache.tapestry5.internal.util.Holder;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
+import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.entities.Account;
 import com.paragonict.webapp.threader.entities.Account.PROTOCOL;
-import com.paragonict.webapp.threader.services.IAccountService;
 
-public class AccountEditor {
+public class AccountEditor extends BaseComponent {
 
 	@Inject
 	private HibernateSessionManager hsm;
-	
-	@Inject
-	private IAccountService as;
-	
-	@Inject
-	private ComponentResources cr;
 	
 	@Component
 	private Form accountedit;
@@ -43,9 +36,9 @@ public class AccountEditor {
 	// already loggedin
 	@Cached
 	public Account getAccount() {
-		if (as.isLoggedIn()) {
-			protocol = as.getAccount().getProtocol().name();
-			return as.getAccount();
+		if (getAccountService().isLoggedIn()) {
+			protocol = getAccountService().getAccount().getProtocol().name();
+			return getAccountService().getAccount();
 		}
 		Account newAccount = new Account();
 		protocol = PROTOCOL.pop3.name();
@@ -53,7 +46,7 @@ public class AccountEditor {
 	}
 	
 	public boolean getIsLoggedIn() {
-		return as.isLoggedIn();
+		return getAccountService().isLoggedIn();
 	}
 	
 	@Cached
@@ -74,7 +67,7 @@ public class AccountEditor {
 	
 	@OnEvent(component="accountedit",value=EventConstants.SUCCESS)
 	private Object updateAccount() {
-		if (as.isLoggedIn()) {
+		if (getAccountService().isLoggedIn()) {
 			hsm.getSession().saveOrUpdate(getAccount());
 		} else {
 			hsm.getSession().save(getAccount());
@@ -133,7 +126,7 @@ public class AccountEditor {
 	private Object throwSuccesEvent() {
 		final Holder<Object> retValue = new Holder<Object>();
 		
-		cr.triggerEvent("accountSuccess", new Object[]{}, new ComponentEventCallback<Object>() {
+		getResources().triggerEvent("accountSuccess", new Object[]{}, new ComponentEventCallback<Object>() {
 			
 			@Override
 			public boolean handleResult(Object result) {

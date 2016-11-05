@@ -21,7 +21,7 @@ public interface IMailService {
 	
 	public Integer getNrOfMessages(final String folder) throws MessagingException;
 	
-	public LocalMessage getLocalMessage(final String UID) throws MessagingException;
+	public LocalMessage getLocalMessage(final Long id) throws MessagingException;
 	
 	/**
 	 * Get the (cached) {@link Message} for {@link LocalMessage}
@@ -43,10 +43,10 @@ public interface IMailService {
 	 * also removes the messages from the local db, if exist
 	 * And updates the localcache.
 	 * 
-	 * @param UID's
+	 * @param id's of the messages.
 	 * @return true or false
 	 */
-	public boolean deleteMailMessage(final String... UIDs) throws MessagingException;
+	public boolean deleteMailMessage(final Long... ids) throws MessagingException;
 	
 	
 

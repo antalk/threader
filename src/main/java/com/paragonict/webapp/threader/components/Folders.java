@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.ValueEncoder;
 import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
@@ -24,26 +23,20 @@ import org.apache.tapestry5.tree.TreeModelAdapter;
 import org.hibernate.criterion.Restrictions;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Folder;
-import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
 
 @RequiresLogin
-public class Folders {
+public class Folders extends BaseComponent {
 	
 	@Inject
 	private HibernateSessionManager hsm;
 	
 	@Inject
-	private ComponentResources resources;
-	
-	@Inject
 	private IMailService ms;
-	
-	@Inject
-	private IAccountService as;
 	
 	@Inject
 	private AjaxResponseRenderer arr;
@@ -64,7 +57,7 @@ public class Folders {
 	private void refreshFolderList() throws MessagingException {
 		ms.getFolders(true);
 		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER);
-		resources.triggerEvent("clearFolderZone", new Object[]{}, null);
+		getResources().triggerEvent("clearFolderZone", new Object[]{}, null);
 	}
 	
 	
@@ -96,7 +89,7 @@ public class Folders {
 			}
 
 			public List<Folder> getChildren(Folder value) {
-				return hsm.getSession().createCriteria(Folder.class).add(Restrictions.eq("account",as.getAccount())).add(Restrictions.eq("parent", value)).list();
+				return hsm.getSession().createCriteria(Folder.class).add(Restrictions.eq("account",getAccountService().getAccount())).add(Restrictions.eq("parent", value)).list();
 			}
 
 			public String getLabel(Folder value) {
@@ -106,7 +99,7 @@ public class Folders {
 		
 		final Folder root = ms.getFolders(false);
 		
-		final List<Folder> roots= hsm.getSession().createCriteria(Folder.class).add(Restrictions.eq("account",as.getAccount())).add(Restrictions.eq("parent", root)).list();
+		final List<Folder> roots= hsm.getSession().createCriteria(Folder.class).add(Restrictions.eq("account",getAccountService().getAccount())).add(Restrictions.eq("parent", root)).list();
 
 		Collections.sort(roots, new Comparator<Folder>() {
 

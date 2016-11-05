@@ -9,7 +9,6 @@ import javax.mail.MessagingException;
 
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;
-import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.OnEvent;
@@ -20,15 +19,15 @@ import org.apache.tapestry5.internal.util.Holder;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.LocalMessage;
-import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IApplicationError;
 import com.paragonict.webapp.threader.services.IMailService;
 
 @RequiresLogin
-public class Contents {
+public class Contents extends BaseComponent {
 
 	@SessionState
 	private SessionStateObject sso;
@@ -37,13 +36,7 @@ public class Contents {
 	private IMailService ms;
 	
 	@Inject
-	private IAccountService as;
-	
-	@Inject
 	private HibernateSessionManager hsm;
-	
-	@Inject
-	private ComponentResources resources;
 	
 	@Inject
 	private IApplicationError appErrors;
@@ -52,7 +45,7 @@ public class Contents {
 	private String messagecontent;
 	
 	public boolean getMessageSelected() {
-		return (sso.hasValue(SESSION_ATTRS.SELECTED_MSG_UID) &&
+		return (sso.hasValue(SESSION_ATTRS.SELECTED_MSG_ID) &&
 				sso.hasValue(SESSION_ATTRS.SELECTED_FOLDER));
 	}
 	
@@ -60,7 +53,7 @@ public class Contents {
 	public LocalMessage getMessage()  throws MessagingException {
 		if (getMessageSelected()) {
 			// retrieve message
-			LocalMessage lm = ms.getLocalMessage(sso.getStringValue(SESSION_ATTRS.SELECTED_MSG_UID));
+			LocalMessage lm = ms.getLocalMessage(sso.getLongValue(SESSION_ATTRS.SELECTED_MSG_ID));
 			if (lm != null) {
 				final Message m = ms.getMailMessage(lm);
 				if (m==null) {
@@ -87,7 +80,7 @@ public class Contents {
 		} else {
 			appErrors.addApplicationError("Please select a message first");
 		}
-		return resources.getBlock("contentblock");
+		return getResources().getBlock("contentblock");
 	}
 	
 	@OnEvent(value="markasunread")
@@ -98,19 +91,19 @@ public class Contents {
 		} else {
 			appErrors.addApplicationError("Please select a message first");
 		}
-		return resources.getBlock("contentblock");
+		return getResources().getBlock("contentblock");
 	}
 	
 	@OnEvent(value="deletemessage")
 	private void deleteMessage() throws MessagingException {
-		ms.deleteMailMessage(sso.getStringValue(SESSION_ATTRS.SELECTED_MSG_UID));
-		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
-		resources.triggerEvent("reloadContent", new Object[]{}, null);
+		ms.deleteMailMessage(sso.getLongValue(SESSION_ATTRS.SELECTED_MSG_ID));
+		sso.clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
+		getResources().triggerEvent("reloadContent", new Object[]{}, null);
 	}
 	
 	@OnEvent(value="viewmessage")
 	private Block openMessage() {
-		return resources.getBlock("messageViewBlock");
+		return getResources().getBlock("messageViewBlock");
 	}
 	
 	@OnEvent(value="reply")
@@ -138,10 +131,10 @@ public class Contents {
 		
 		String newUID  =  UUID.randomUUID().toString();
 		newMessage.setUID(newUID);
-		newMessage.setAccount(as.getAccount().getId());
-		newMessage.setFromAdr(as.getAccount().getEmailAddress());
+		newMessage.setAccount(getAccountService().getAccount().getId());
+		newMessage.setFromAdr(getAccountService().getAccount().getEmailAddress());
 		
-		newMessage.setSubject(resources.getMessages().get("reply.prefix") + getMessage().getSubject());
+		newMessage.setSubject(getResources().getMessages().get("reply.prefix") + getMessage().getSubject());
 		newMessage.setFolder("DRAFTS");
 		
 		hsm.getSession().saveOrUpdate(newMessage);
@@ -150,7 +143,7 @@ public class Contents {
 		
 		final Holder<Block> holder = new Holder<Block>();
 		
-		if (resources.triggerEvent("composeMessage", new Object[] {newUID}, new ComponentEventCallback<Block>() {
+		if (getResources().triggerEvent("composeMessage", new Object[] {newUID}, new ComponentEventCallback<Block>() {
 
 			public boolean handleResult(Block result) {
 				holder.put(result);
@@ -167,6 +160,7 @@ public class Contents {
 	public boolean getMessageRead() throws MessagingException {
 		return ms.getMailMessage(getMessage()).getFlags().contains(Flag.SEEN);
 	}
+	
 	
 	
 }

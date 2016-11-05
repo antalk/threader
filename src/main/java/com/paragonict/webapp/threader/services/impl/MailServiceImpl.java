@@ -16,12 +16,14 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.mail.util.MimeMessageParser;
 import org.apache.tapestry5.grid.SortConstraint;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
+import org.apache.tapestry5.hibernate.HibernateSessionSource;
 import org.apache.tapestry5.ioc.LoggerSource;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.ioc.annotations.PostInjection;
 import org.apache.tapestry5.ioc.annotations.Symbol;
 import org.apache.tapestry5.ioc.internal.util.TapestryException;
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -33,11 +35,11 @@ import com.paragonict.webapp.threader.entities.Folder;
 import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IApplicationError;
+import com.paragonict.webapp.threader.services.IMailFetcher;
 import com.paragonict.webapp.threader.services.IMailService;
 import com.paragonict.webapp.threader.services.IMailSession;
 import com.paragonict.webapp.threader.services.IMailStore;
 import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.IMAPFolder.FetchProfileItem;
 import com.sun.mail.pop3.POP3Folder;
 import com.sun.mail.smtp.SMTPMessage;
 
@@ -56,6 +58,9 @@ public class MailServiceImpl implements IMailService {
 	private HibernateSessionManager hsm;
 	
 	@Inject
+	private HibernateSessionSource hss;
+	
+	@Inject
 	private IAccountService as;
 	
 	@Inject
@@ -70,6 +75,9 @@ public class MailServiceImpl implements IMailService {
 	
 	@Inject
 	private IApplicationError appErrors;
+	
+	@Inject
+	private IMailFetcher fetcher;
 
 	@Inject
 	@Symbol(value=Constants.SYMBOL_MAIL_DEBUG)
@@ -139,8 +147,9 @@ public class MailServiceImpl implements IMailService {
 	}
 	
 	@Override
-	public LocalMessage getLocalMessage(String UID) throws MessagingException {
-		return (LocalMessage) hsm.getSession().load(LocalMessage.class, UID);
+	public LocalMessage getLocalMessage(final Long id) throws MessagingException {
+		// will return a proxy.. load..
+		return (LocalMessage) hsm.getSession().load(LocalMessage.class, id);
 	}
 	
 	
@@ -165,11 +174,11 @@ public class MailServiceImpl implements IMailService {
 				childs = Arrays.asList(f.list("%"));
 			}
 			childFolder.setHasChilds(!childs.isEmpty());
-			
+			/* this does not work yet.
 			if (f instanceof IMAPFolder) {
 				// set some more stuff
 				childFolder.setUidValidity(((IMAPFolder)f).getUIDValidity());
-			}
+			}*/ 
 			hsm.getSession().persist(childFolder);
 			
 			if (!childs.isEmpty()) {
@@ -189,77 +198,34 @@ public class MailServiceImpl implements IMailService {
 			// deletes will be immediately
 			// and remote deletes will show up when you try to open the message.
 			
-			// FETCH ALL LOCAL UIDS FROM the selected folder
-			final List<String> storedUIDs = hsm.getSession().getNamedQuery(LocalMessage.GET_ALL_UIDS).
-				setLong("accountid", as.getAccount().getId()).
-				setString("folder",folder).list();
 			
-			int nrofDBRows = storedUIDs.size();
 			
-	        logger.debug("Nr. of local stored messages {}, number of message on server {}", nrofDBRows,mailTotal);
+			// this will return when we have enough localmessages to query for..
+			fetcher.isInSync(folder, end, mailTotal);
 	        
-	        if (mailTotal > nrofDBRows) {
-	        	// this is also wrong the results coudl be the same but different message could be added / deleted from a 
-	        	// remote client..... (with the same account.... though..)
-	        	// maybe a possible solution is to periodically check for changes and update the local db as such...
-	        	// or add some listeners to mailserver updates...
-	        	
-	        	javax.mail.Folder f = store.getFolder(folder);
-				if (!f.isOpen()) {
-					f.open(javax.mail.Folder.READ_ONLY); // read only, RW will be done per individual message
-				}
-				
-				final Message[] msgs = f.getMessages();
-				final FetchProfile fp = new FetchProfile();
-				fp.add(javax.mail.UIDFolder.FetchProfileItem.UID);
-				f.fetch(msgs, fp);
-				
-				LocalMessage possiblyNewMsg = null;
-				for (Message m:msgs) {
-					// filter the message we already have
-					possiblyNewMsg = new LocalMessage(m, as.getAccount());
-					
-					if (storedUIDs.contains(possiblyNewMsg.getUID())) {
-						logger.debug("Message with UID {} already stored, skipping",possiblyNewMsg.getUID());
-						storedUIDs.remove(possiblyNewMsg.getUID()); // remove from list
-					} else {
-						// ah new mssg
-						logger.debug("Adding new localmessage from {} ",m);
-						hsm.getSession().save(possiblyNewMsg);
-						nrofDBRows++;
-					}
-					// then a quick break if we are in sync
-					if (nrofDBRows == mailTotal) {
-						logger.debug("Number of messages {} on server and in DB match, stop searching",nrofDBRows);
-						break;// dont bother in searching the rest..
-					}
-				}
-				// now we have stored ALL new msgs
-				hsm.commit(); // done
-	        }
-
 			// now query, TODO: ordering and filtering /search can only be done on the COMPLETE set of rows.. not the subset returning
-			Criteria criteria = hsm.getSession().createCriteria(LocalMessage.class);
+			// TODO a new session is required... has something todo with the update in the OTHER session (asyncfetcher)
+			final Session s = hss.create();
+			final Criteria criteria = s.createCriteria(LocalMessage.class);
 			criteria.add(Restrictions.eq("folder", folder.toUpperCase()));
 			criteria.add(Restrictions.eq("account", as.getAccount().getId()));
 			criteria.addOrder(Order.desc("sentDate"));
 			
 			//criteria.setFirstResult(start).setMaxResults((end+1)-start);
-			
-			
-			return criteria.list().subList(start, end+1);
+			try {
+				return criteria.list().subList(start, end+1);
+			} finally {
+				s.close();
+			}
 		}
 		return Collections.emptyList();
 	}
-	
-	
-		
 	
 	@Override
 	public Integer getNrOfMessages(String folder) throws MessagingException {
 		
 		if (as.getAccount().getProtocol().equals(PROTOCOL.pop3) ||
-				as.getAccount().getProtocol().equals(PROTOCOL.pops)) {
+				as.getAccount().getProtocol().equals(PROTOCOL.pop3s)) {
 			if (!folder.equalsIgnoreCase("INBOX")) {
 				// get nr of message locally stored only
 				return ((Long) hsm.getSession().createCriteria(LocalMessage.class)
@@ -277,11 +243,9 @@ public class MailServiceImpl implements IMailService {
 		return 0;
 	}
 	
-	
-
 	@Override
 	public SMTPMessage createMessage() {
-		return new SMTPMessage(session.getSession());
+		return new SMTPMessage(session.getSession(as));
 	}
 	
 	@Override
@@ -301,7 +265,7 @@ public class MailServiceImpl implements IMailService {
 				final Message msg = (Message) e.getObjectValue();
 				final javax.mail.Folder f = msg.getFolder();
 				if (!f.isOpen()) {
-					logger.debug("folder {} is not open",f);
+					logger.debug("folder {} is not open for (cached) message {}",f,msg);
 					store.registerFolder(f);
 					f.open(javax.mail.Folder.READ_WRITE);
 				}
@@ -364,17 +328,17 @@ public class MailServiceImpl implements IMailService {
 
 	/* TODO: make this transactional and more robust..*/
 	@Override
-	public boolean deleteMailMessage(final String... UIDs) throws MessagingException {
+	public boolean deleteMailMessage(final Long... IDs) throws MessagingException {
 		boolean result = true;
-		if (UIDs.length > 0) {
+		if (IDs.length > 0) {
 			
 			
 			LocalMessage lm = null;
 			final List<Message> remoteMsgsToDelete = new ArrayList<Message>();
 			
-			for (String UID : UIDs) {
+			for (Long ID : IDs) {
 				try {
-					lm = getLocalMessage(UID);
+					lm = getLocalMessage(ID);
 					if (isRemoteFolder(lm.getFolder())) {
 						remoteMsgsToDelete.add(getMailMessage(lm));
 					}
@@ -385,6 +349,7 @@ public class MailServiceImpl implements IMailService {
 					result = false;
 				}
 			}
+			hsm.commit();
 			
 			if (!remoteMsgsToDelete.isEmpty()) {
 				
@@ -396,12 +361,12 @@ public class MailServiceImpl implements IMailService {
 					affectedFolder.setFlags(remoteMsgsToDelete.toArray(new Message[]{}), deleted,true);
 					affectedFolder. close(true);
 				 
-					hsm.commit();
 				} catch (MessagingException e) {
 					// TODO try saving my messages???
 					e.printStackTrace();
 				}
 			}
+
 		}		
 		return result;
 	}
@@ -446,7 +411,7 @@ public class MailServiceImpl implements IMailService {
 		
 	private boolean isRemoteFolder(final String folder) {
 		if (as.getAccount().getProtocol().equals(PROTOCOL.pop3) ||
-				as.getAccount().getProtocol().equals(PROTOCOL.pops)) {
+				as.getAccount().getProtocol().equals(PROTOCOL.pop3s)) {
 			if (!folder.equalsIgnoreCase("INBOX")) {
 				return false;
 			}

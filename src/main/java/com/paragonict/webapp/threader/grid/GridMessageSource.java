@@ -1,5 +1,6 @@
 package com.paragonict.webapp.threader.grid;
 
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,6 +44,12 @@ public class GridMessageSource implements GridDataSource {
 			
 			System.err.println("START" + startIndex );
 			System.err.println("END" + endIndex );
+			System.err.println("NR OF ROWS  on server" + _nrOfRows);
+			
+			if (_nrOfRows < endIndex + 1) {
+				System.err.println(MessageFormat.format("There are LESS messages {} on the server than requested {}, returning max. number of msgs on server", _nrOfRows,endIndex+1));
+			}
+			
 			
 			// can only be 1 sort !! (!)!??
 			SortConstraint sc = null;

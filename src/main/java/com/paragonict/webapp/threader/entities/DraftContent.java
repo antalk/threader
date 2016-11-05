@@ -1,27 +1,26 @@
 package com.paragonict.webapp.threader.entities;
 
-import java.io.Serializable;
-
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.OneToOne;
 
 @Entity
-public class DraftContent implements Serializable {
+public class DraftContent extends AbstractIdEntity {
 	
 	private static final long serialVersionUID = -4606795730015496488L;
 	
-	private String UID;
 	// base64 encoded content in utf-8!
 	private String content; 
 	
-	@Id
-	public String getUID() {
-		return UID;
+	private LocalMessage localMessage;
+	
+	@OneToOne(optional=true,orphanRemoval=true)
+	public LocalMessage getLocalMessage() {
+		return localMessage;
 	}
-
-	public void setUID(String uID) {
-		UID = uID;
+	
+	public void setLocalMessage(LocalMessage localMessage) {
+		this.localMessage = localMessage;
 	}
 	
 	/**

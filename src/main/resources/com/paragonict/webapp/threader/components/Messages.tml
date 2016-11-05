@@ -3,9 +3,9 @@
       xmlns:p="tapestry:parameter">
       
       <t:if test="folderSelected">
-      	<t:ProgressiveDisplay/>
+      	<t:ProgressiveDisplay initial="prop:ajaxLoader" update="show"/>
       	<p:else>
-      		Select a working folder
+      		<div class="well">Select a working folder</div>
       	</p:else>
       </t:if>
       
@@ -25,26 +25,26 @@
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
-		     	  <t:grid t:id="messageGrid" source="messageSource" include="prop:columns" add="check,address" reorder="check,address" row="message" zone="messageZone" class="table table-hover" >  
-				  	<p:checkHeader>
+		     	  <t:grid t:id="messageGrid" source="messageSource" include="literal:uid" add="address,date" reorder="uid,address" row="message" zone="messageZone" pagerPosition="bottom" rowsPerPage="5" inplace="true"	class="table table-hover" >  
+				  	<p:uidHeader>
 				  		<span class="glyphicon glyphicon-check" ></span>
-				  	</p:checkHeader>
+				  	</p:uidHeader>
 				  	<p:addressHeader>
 				  		${headerAddress}
 				  	</p:addressHeader>
 				  	
-				  	<p:checkCell>
+				  	<p:uidCell>
 				  		<t:form>
-				  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.UID"/>
+				  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.id"/>
 				  		</t:form> 
-				  	</p:checkCell>
+				  	</p:uidCell>
 				  	<p:addressCell>
 				  		<!--  either from or to address here -->
 				  		${fromortoAddress}<br/>
 				  		<t:if test="isOutGoing">
 					  		<t:tapisser.Modal t:event="composeMessage" t:context="message.uid" large="true">${subject}</t:tapisser.Modal>
 				  			<p:else>
-				  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.UID">
+				  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.id">
 						  			<t:if test="messageRead">
 						  				${subject}
 						  				<p:else>
@@ -56,9 +56,9 @@
 				  		</t:if>
 				  		
 				  	</p:addressCell>
-				  	<p:sentDateCell>
+				  	<p:dateCell>
 				  		${messageDate}
-				  	</p:sentDateCell>
+				  	</p:dateCell>
 				</t:grid>
 			</div>
 		</div>

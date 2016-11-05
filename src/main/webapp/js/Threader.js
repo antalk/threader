@@ -145,8 +145,11 @@ function selectFolder(id,nrofunreadmsgs) {
 	var folderelement = $('folderzone').select('#'+id)[0];
 	folderelement.addClassName('selected');
 	// also update the unread msgs number
-	if (nrofunreadmsgs) {
-		folderelement.parentNode.nextSibling.update(nrofunreadmsgs);
+	if (nrofunreadmsgs == 0) {
+		// remove label
+		folderelement.down().update('');
+	} else if (nrofunreadmsgs) {
+		folderelement.down().update(nrofunreadmsgs);
 	}
 	
 }

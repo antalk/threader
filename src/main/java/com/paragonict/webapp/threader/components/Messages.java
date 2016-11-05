@@ -1,5 +1,7 @@
 package com.paragonict.webapp.threader.components;
 
+import java.text.MessageFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -7,9 +9,9 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;
-import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
@@ -30,6 +32,7 @@ import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 import org.chenillekit.tapestry.core.components.AjaxCheckbox;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.LocalMessage;
@@ -38,13 +41,10 @@ import com.paragonict.webapp.threader.services.IMailService;
 
 @RequiresLogin
 @Import(stylesheet="messages/messages.css")
-public class Messages {
+public class Messages extends BaseComponent {
 	
 	@SessionState
 	private SessionStateObject sso;
-	
-	@Inject
-	private ComponentResources resources;
 	
 	@Inject
 	private AjaxResponseRenderer arr;
@@ -68,20 +68,29 @@ public class Messages {
 	private boolean msgChecked;
 	
 	@Persist // persist only for THIS page, and this user..
-	private List<String> selectedUIDs;
+	private List<Long> selectedIDs;
+	
+	@Persist
+	private String lastFolderSelected;
 	
 	@SetupRender
 	private void setup() {
 		if (getFolderSelected()) {
-				
+			
+			if (!sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER).equals(lastFolderSelected)) {
+				messageGrid.reset();
+				lastFolderSelected = sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER);
+			}
+			
+			
 			// sorting by default on sentDate, can be from and subject...		
 			if (messageGrid.getSortModel().getSortConstraints().isEmpty()) {
-				while (messageGrid.getSortModel().getColumnSort("sentDate").compareTo(ColumnSort.DESCENDING) !=0) {
-					messageGrid.getSortModel().updateSort("sentDate");
+				while (messageGrid.getSortModel().getColumnSort("date").compareTo(ColumnSort.DESCENDING) !=0) {
+					messageGrid.getSortModel().updateSort("date");
 				}
 			}
 		}
-		selectedUIDs = new LinkedList<String>();// clear
+		selectedIDs = new LinkedList<Long>();// clear
 	}
 	
 
@@ -91,21 +100,22 @@ public class Messages {
 		
 	@OnEvent(value=EventConstants.PROGRESSIVE_DISPLAY)
 	private Block loadMessages() throws MessagingException {
-		return resources.getBlock("messageblock");
+		return getResources().getBlock("messageblock");
 	}
 	
 	// ajax event.. trigger zone 'messages' to reload messages
 	private Block onDeleteMessages() throws MessagingException {
 		
-		if (!selectedUIDs.isEmpty()) {
+		if (!selectedIDs.isEmpty()) {
 			
-			final String currentWorkingDraftUID = sso.getStringValue(SESSION_ATTRS.DRAFT_UID);
-			final String currentViewingMsgID = sso.getStringValue(SESSION_ATTRS.SELECTED_MSG_UID);
+			final Long currentWorkingDraftUID = sso.getLongValue(SESSION_ATTRS.DRAFT_ID);
+			final Long currentViewingMsgID = sso.getLongValue(SESSION_ATTRS.SELECTED_MSG_ID);
 			
-			service.deleteMailMessage(selectedUIDs.toArray(new String[]{}));
+			service.deleteMailMessage(selectedIDs.toArray(new Long[]{}));
 			
 			// TODO: move this to businesslogic
-			for (String UID: selectedUIDs) {
+			/*
+			for (Long id: selectedIDs) {
 				
 				if (UID.equals(currentWorkingDraftUID)) {
 					sso.clearValue(SESSION_ATTRS.DRAFT_UID);
@@ -115,10 +125,11 @@ public class Messages {
 				}
 				
 			}
+			*/
 			am.info("Deleted selected messages");
 			//trigger ajax reload
 			
-			return resources.getBlock("messageblock");
+			return getResources().getBlock("messageblock");
 		} else {
 			am.info("No messages selected");
 			return null;
@@ -126,12 +137,18 @@ public class Messages {
 	}
 	
 	@OnEvent(value=AjaxCheckbox.EVENT_NAME)
-	private void toggleMessage(String UID) {
-		if (selectedUIDs.contains(UID)) {
-			// already in , remove
-			selectedUIDs.remove(UID);
+	private void toggleMessage(Long id) {
+		if (selectedIDs != null) {
+			if (selectedIDs.contains(id)) {
+				// already in , remove
+				selectedIDs.remove(id);
+			} else {
+				selectedIDs.add(id);
+			}
 		} else {
-			selectedUIDs.add(UID);
+			// session expired..
+			am.warn(MessageFormat.format("Could not select msg with id {}, session invalid or expired",id));
+			// TODO: make sure this message appears as response on the current AJAX request and not AFTER this!
 		}
 	}
 	
@@ -147,7 +164,6 @@ public class Messages {
 	
 	/*
 	 *  TODO: also check if this is the SENT items folder!!!, same type as draft, eg. outgoing !
-	 *  TOOD: rename to outgoing
 	 */
 	@Cached
 	public boolean getIsOutGoing() {
@@ -183,29 +199,27 @@ public class Messages {
 	}
 	
 	public String getMessageDate() throws MessagingException {
-		if (message.getSentDate() == null) {
+		final Date calcDate = getIsOutGoing()?message.getSentDate():message.getReceivedDate();
+		
+		if (calcDate == null) {
 			return "<Unknown>";
-		}
-		// do this with java 8 date?
-		return DateFormatUtils.SMTP_DATETIME_FORMAT.format(message.getSentDate());
-	}
-	
-	public String getColumns() {
-		if (getIsOutGoing()) {
-			return "sentDate"; // TODO; get creation or lamu date here?
 		} else {
-			return "sentDate";
+			if (DateUtils.isSameDay(calcDate, new Date())) {
+				return DateFormatUtils.format(calcDate, com.paragonict.webapp.threader.Constants.DAYTIME);
+			} else {
+				return DateFormatUtils.format(calcDate, com.paragonict.webapp.threader.Constants.YEAR_MONTH_DAY);
+			}
 		}
 	}
 	
 	@OnEvent(value="fetchMessageContent")
-	private void getMessageContent(String UID) {
+	private void getMessageContent(Long id) {
 		
 		System.err.println("Read the message content");
 		
 		final Holder<Block> holder = new Holder<Block>();
 		
-		if (resources.triggerEvent("getMessageContent", new Object[] {UID}, new ComponentEventCallback<Block>() {
+		if (getResources().triggerEvent("getMessageContent", new Object[] {id}, new ComponentEventCallback<Block>() {
 
 			public boolean handleResult(Block result) {
 				holder.put(result);

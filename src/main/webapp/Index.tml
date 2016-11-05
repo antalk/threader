@@ -20,7 +20,7 @@
 	   	      	 </div>
    	      	 </div>
    	      	  
-			  <div class="col-md-3 scrollable">
+			  <div class="col-md-2 scrollable">
 			  	<t:zone t:id="folderzone" id="folderzone">
 			  		<t:Folders/>
 			  	</t:zone>
@@ -30,7 +30,7 @@
 			  		<t:Messages t:id="messages" id="messages"/>
 			  	</t:zone>
 			  </div>
-			  <div class="col-md-5 scrollable">
+			  <div class="col-md-6 scrollable">
 			  	<t:zone t:id="contentZone" id="contentZone">
 			  		<t:contents/>
 			  	</t:zone>
@@ -76,5 +76,9 @@
 	
 	<t:block t:id="composeBlock">	
 		<t:MailComposer/>
+	</t:block>
+	
+	<t:block t:id="ajaxLoader">
+		<div class="well"><img src="images/loader.gif"/>Loading...</div>
 	</t:block>
 </html>

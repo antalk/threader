@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
@@ -14,7 +13,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage.RecipientType;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.CharEncoding;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
@@ -38,6 +39,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptSupport;
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
@@ -120,14 +122,14 @@ public class MailComposer {
 	@Cached
 	public LocalMessage getMsg() {
 		LocalMessage draft = null;
-		if (sso.hasValue(SESSION_ATTRS.DRAFT_UID)) {
-			draft = (LocalMessage) hsm.getSession().load(LocalMessage.class, sso.getStringValue(SESSION_ATTRS.DRAFT_UID));
+		if (sso.hasValue(SESSION_ATTRS.DRAFT_ID)) {
+			draft = (LocalMessage) hsm.getSession().load(LocalMessage.class, sso.getLongValue(SESSION_ATTRS.DRAFT_ID));
 			// retrieve content once
-			final DraftContent dc = (DraftContent) hsm.getSession().get(DraftContent.class, sso.getStringValue(SESSION_ATTRS.DRAFT_UID));
+			final DraftContent dc = (DraftContent) hsm.getSession().get(DraftContent.class, sso.getLongValue(SESSION_ATTRS.DRAFT_ID));
 			if (dc != null) {
 				try {
 					if (StringUtils.isNotEmpty(dc.getContent())) {
-						content = new String(Base64.decodeBase64(dc.getContent()),"UTF-8");
+						content = new String(Base64.decodeBase64(dc.getContent()),CharEncoding.UTF_8);
 					} else {
 						content = "";
 					}
@@ -138,15 +140,15 @@ public class MailComposer {
 
 		}
 		if (draft == null) {
-			sso.putValue(SESSION_ATTRS.DRAFT_UID, UUID.randomUUID().toString());
 			
 			draft = new LocalMessage();
 			draft.setAccount(as.getAccount().getId());
 			draft.setFromAdr(as.getAccount().getEmailAddress());
 			draft.setFolder("DRAFTS");
-			draft.setUID(sso.getStringValue(SESSION_ATTRS.DRAFT_UID));
 			hsm.getSession().persist(draft);
 			hsm.commit();
+			sso.putValue(SESSION_ATTRS.DRAFT_ID, draft.getId());
+			
 		}
 		
 		return draft;
@@ -200,7 +202,7 @@ public class MailComposer {
 
 	
 	@OnEvent(component="mailEditForm",value=EventConstants.VALIDATE)
-	private Object validateMessage() {
+	private Object prepareMessage() {
 		if (action.equals(COMPOSEACTION.send)) {
 		
 			if (StringUtils.isBlank(recipientAddresses)) {
@@ -217,14 +219,6 @@ public class MailComposer {
 				recipients = null;
 				return maileditzone.getBody();
 			}
-		}
-		return null;
-	}
-	
-	@OnEvent(component="mailEditForm",value=EventConstants.SUCCESS)
-	private Object handleFormSucces () {
-		switch (action) {
-		case send :{
 			final SMTPMessage sm = ms.createMessage();
 			try {
 				sm.addFrom(new InternetAddress[] { new InternetAddress(getMsg().getFromAdr())});
@@ -239,20 +233,35 @@ public class MailComposer {
 				sm.setContent(content, "text/plain");
 				Transport.send(sm);
 				// TODO:  send can throw exceptiosn, so this must not be in the succes phase... but BEFORE thst
-				
-				
-				hsm.getSession().delete(hsm.getSession().load(LocalMessage.class,getMsg().getUID()));
-				// also delete draft contents if any
-				hsm.getSession().delete(hsm.getSession().load(DraftContent.class,getMsg().getUID()));
-				
-				
-				hsm.commit();
-				sso.clearValue(SESSION_ATTRS.DRAFT_UID);
 			} catch (Exception e) {
 				e.printStackTrace();
-				mailEditForm.recordError(e.getMessage());
+				// get to the root cause
+				
+				
+				
+				mailEditForm.recordError(ExceptionUtils.getRootCause(e).getMessage());
 				return maileditzone.getBody();
 			}
+			
+		}
+		return null;
+	}
+	
+	@OnEvent(component="mailEditForm",value=EventConstants.SUCCESS)
+	private Object handleFormSucces () {
+		switch (action) {
+		case send :{
+			hsm.getSession().delete(hsm.getSession().load(LocalMessage.class,getMsg().getId()));
+			// also delete draft contents if any
+			
+			final DraftContent df = (DraftContent) hsm.getSession().get(DraftContent.class,getMsg().getId());
+			if (df != null) {
+				hsm.getSession().delete(df);
+			}
+				
+			hsm.commit();
+			sso.clearValue(SESSION_ATTRS.DRAFT_ID);
+			
 			arr.addCallback(new JavaScriptCallback() {
 				
 				@Override
@@ -267,10 +276,12 @@ public class MailComposer {
 		case save :{
 			hsm.getSession().persist(getMsg());
 			// use GET , can return null
-			DraftContent dc = (DraftContent) hsm.getSession().get(DraftContent.class, getMsg().getUID());
+			final Criteria crit = hsm.getSession().createCriteria(DraftContent.class);
+			crit.add(Restrictions.eq("localMessage", getMsg()));
+			DraftContent dc = (DraftContent) crit.uniqueResult();
 			if (dc ==null) {
 				dc = new DraftContent();
-				dc.setUID(getMsg().getUID());
+				dc.setLocalMessage(getMsg());
 			}
 			if (StringUtils.isNotEmpty(content)) {
 				try {
@@ -280,12 +291,7 @@ public class MailComposer {
 				}
 			}
 			hsm.getSession().saveOrUpdate(dc);
-			
-			
 			hsm.commit();
-			
-			
-			
 			return null;
 		}
 		}

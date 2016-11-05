@@ -58,3 +58,7 @@ code {
 th .check {
 	width: 10px;
 }
+
+DIV.t-tree-container LI {
+	white-space: nowrap;
+}

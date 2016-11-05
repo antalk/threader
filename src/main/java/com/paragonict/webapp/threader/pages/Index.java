@@ -107,7 +107,7 @@ public class Index extends AuthenticatedPage {
 			selectedFolder.setUnreadMsgs(0);
 		}
 		getSso().putValue(SESSION_ATTRS.SELECTED_FOLDER, selectedFolder.getName());
-		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
+		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
 		getArr().addRender(messageZone).addRender(contentZone).addCallback(new JavaScriptCallback() {
 			
 			@Override
@@ -121,23 +121,23 @@ public class Index extends AuthenticatedPage {
 	@OnEvent(value="composeMessage")
 	private Block getMessageEditor(EventContext context) throws UnsupportedEncodingException {
 		if (context.getCount() == 1) {
-			String UID = context.get(String.class,0);
-			getSso().putValue(SESSION_ATTRS.DRAFT_UID, UID);
+			Long id = context.get(Long.class,0);
+			getSso().putValue(SESSION_ATTRS.DRAFT_ID, id);
 		}
 		return getResources().getBlock("composeBlock");
 	}
 
 	
 	@OnEvent(value="getMessageContent")
-	private Block getMessageContents(final String UID) {
-		getSso().putValue(SESSION_ATTRS.SELECTED_MSG_UID, UID);
+	private Block getMessageContents(final Long id) {
+		getSso().putValue(SESSION_ATTRS.SELECTED_MSG_ID, id);
 		return contentZone.getBody();
 	}
 	
 	@OnEvent(value="clearFolderZone")
 	private void reloadFolders() { 
 		getSso().clearValue(SESSION_ATTRS.SELECTED_FOLDER);
-		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_UID);
+		getSso().clearValue(SESSION_ATTRS.SELECTED_MSG_ID);
 		getArr().addRender(folderZone).addRender(messageZone).addRender(contentZone);
 	}
 	

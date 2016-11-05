@@ -11,6 +11,7 @@ import org.apache.tapestry5.ioc.annotations.Inject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.pages.Index;
 import com.paragonict.webapp.threader.services.IAccountService;
+import com.paragonict.webapp.threader.services.IMailSession;
 
 /**
  * Layout component for pages of application threader.
@@ -24,12 +25,16 @@ public class Layout {
 	@Inject
 	private ComponentResources res;
 	
-	@Inject
+	@Inject 
 	private IAccountService as;
+	
+	@Inject
+	private IMailSession session;
 	
 	@OnEvent(value="logout")
 	private Object logout() {
 		sso.clearAll();
+		session.clearSession(as);
 		return Index.class;
 	}
 	
@@ -41,6 +46,14 @@ public class Layout {
 	@Cached
 	public String getLinkEnabled() {
 		return (as.isLoggedIn()?"enabled":"disabled");
+	}
+	
+	public String getAccountName() {
+		if (getIsLoggedIn()) {
+			return as.getAccount().getFullName();
+		} else {
+			return "Account";
+		}
 	}
 	
 	

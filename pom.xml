@@ -14,6 +14,7 @@
 		<servlet-api-release-version>2.5</servlet-api-release-version>
 		<testng-release-version>5.14.10</testng-release-version>
 		<easymock-release-version>3.0</easymock-release-version>
+		<java.version>1.8</java.version>
 	</properties>
 
 	<repositories>
@@ -133,10 +134,15 @@
 			<version>1.4.0</version>
 		</dependency>
 		<dependency>
-	<groupId>org.apache.commons</groupId>
-	<artifactId>commons-email</artifactId>
-	<version>1.4</version>
-</dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-email</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.james</groupId>
+			<artifactId>apache-mime4j-dom</artifactId>
+			<version>0.7.2</version>
+		</dependency>
 		
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
@@ -193,8 +199,8 @@
 				<version>2.3.2</version>
 				<configuration>
 					<outputFileName>threader</outputFileName>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
 					<optimize>true</optimize>
 				</configuration>
 			</plugin>

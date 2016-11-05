@@ -14,7 +14,7 @@
 			<t:form t:id="mailEditForm" zone="^">
 				<t:errors/>
 				<t:beandisplay object="msg" add="content" 
-					reorder="fromAdr,toAdr,ccAdr,bccAdr,subject,content" exclude="account,folder,sentDate,uid" t:mixins="tapisser/bootstrap">
+					reorder="fromAdr,toAdr,ccAdr,bccAdr,subject,content" exclude="account,folder,sentDate,receivedDate,uid,id" t:mixins="tapisser/bootstrap">
 					<p:FromAdr>
 						<t:textfield value="msg.fromAdr" readonly="readonly"/>
 					</p:FromAdr>

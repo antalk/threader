@@ -30,7 +30,7 @@ public class Error implements ExceptionReporter  {
 	@Override
 	public void reportException(Throwable exception) {
 		// clear session storage (except the logged in user/admin)..
-		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER,SESSION_ATTRS.SELECTED_MSG_UID,SESSION_ATTRS.DRAFT_UID);
+		sso.clearValue(SESSION_ATTRS.SELECTED_FOLDER,SESSION_ATTRS.SELECTED_MSG_ID,SESSION_ATTRS.DRAFT_ID);
 		rootexception = exception;
 	}
 	

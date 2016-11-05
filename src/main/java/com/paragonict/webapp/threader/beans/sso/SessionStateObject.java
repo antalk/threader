@@ -20,8 +20,8 @@ public final class SessionStateObject implements Serializable {
 		USER_ID(Long.class),
 		ADMIN_ID(Long.class),
 		SELECTED_FOLDER(String.class),
-		DRAFT_UID(String.class),
-		SELECTED_MSG_UID(String.class);   // String, UUID of the message
+		DRAFT_ID(Long.class),
+		SELECTED_MSG_ID(Long.class);
 		
 		private final Class clazz;
 		
