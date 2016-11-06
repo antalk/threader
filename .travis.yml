@@ -1,6 +1,6 @@
 language: java
 jdk:
- - oraclejdk8
+- oraclejdk8
 deploy:
   provider: heroku
   api_key:
@@ -8,3 +8,9 @@ deploy:
   app: threadert5
   on:
     repo: antalk/threader
+env:
+  global:
+    secure: cNC/ejmrZisaTP4QP7N6j2uMRwMsa6uN65ZxQ3DdXCjTCr5bKxXhfY/FG4YsxJQEst8arEptjIJKu7QEVmhjBp8tDfaRvx9GpBuaS/7Z0lFRkmWEZLPbajm6QjgRG9yyJAuAHydxg3Ss0v2LDrf0nGsMjMSt0DpiXpMQS5wQWbO/QD2FwSym0UFtudVfaB9gQYW8Pla69FERlJzBKqvG21ojpFu0eFjR3fZbVjLdo7gFExVJxDTkydCG7eGodLudT5/H+NlQTa0h7QknSk5M2k2i2OhSjwrgmE0EtvpCLcbntF9cnxtWIOzGpIetT5Vtea5tNk4CscBmeh1S1EPKalJWdMoAoBQfcXJqcrXP4BjsZKQ4B/XJS5CeIv1HZQHFsITZjTbWSbZM++KGgq4Ap0QYKLtkDNKQh2d+Zk0I9P0WoQTDZSNXN4y4L8pRG8r4y8pIEGQ/dys+ak5nXqHEXH/rf3OkMGgMRrkYuwGENApRG3tKA2g0IPg6bOADpHibUuhCbVdYtP15zQ0xT1FOWbKF11tlN+76i2dNwDKamY1m6VR20/BDTVmMbj2VcCGz6sd4ZDz+Kj82tR/H2/1RGIGprEmVEtLhgc/e7vf0D2lqGAwS5NmhDnk2w6UQOo9bY9VwAsEF8HG28b6uXV7oBWoCh3i4oxmp7RalxeCNY24=
+script:
+  # the following command line builds the project, and then execute the SonarQube analysis
+  - mvn clean install sonar:sonar -Dsonar.login=$SONAR_TOKEN
