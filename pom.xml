@@ -15,7 +15,7 @@
 		<testng-release-version>5.14.10</testng-release-version>
 		<easymock-release-version>3.0</easymock-release-version>
 		<java.version>1.8</java.version>
-		<sonar.host.url>https:///www.sonarqube.com</sonar.host.url>
+		<sonar.host.url>https://sonarqube.com</sonar.host.url>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
