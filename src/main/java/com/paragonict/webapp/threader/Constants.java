@@ -10,5 +10,5 @@ public class Constants {
 	
 	public final static String YEAR_MONTH_DAY = "yyyy/MM/dd";
 	
-	public final static String DAYTIME = "hh:mm:ss";
+	public final static String DAYTIME = "HH:mm:ss";
 }

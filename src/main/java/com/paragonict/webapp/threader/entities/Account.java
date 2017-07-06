@@ -3,10 +3,22 @@ package com.paragonict.webapp.threader.entities;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.QueryHint;
 
+@NamedQueries({
+	@NamedQuery(
+			hints={@QueryHint(name="org.hibernate.readOnly",value="true")},
+			name = Account.GET_ACCOUNTID,
+			query = "select a.id from Account a where a.id = :accountid"
+	)}
+)
 @Entity
 public class Account extends AbstractIdEntity {
 
+	public final static String GET_ACCOUNTID = "GetAccountId";
+	
 	public enum PROTOCOL {
 		pop3, imap, pop3s, imaps;
 	}

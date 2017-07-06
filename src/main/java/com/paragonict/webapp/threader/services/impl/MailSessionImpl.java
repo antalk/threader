@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.mail.MessagingException;
 import javax.mail.Session;
 
 import org.apache.tapestry5.ioc.annotations.Inject;
@@ -29,23 +30,27 @@ public class MailSessionImpl implements IMailSession {
 	
 	@Override
 	public synchronized Session getSession(final IAccountService as) {
-		if (!_mailSessions.containsKey(as.getAccount().getId())) {
+		if (!_mailSessions.containsKey(as.getAccountID())) {
 			
 			System.err.println("Creating new mail Session for user " + as);
 			
 			final Session userSession = Session.getInstance(setProperties(as));
 			if (debug) userSession.setDebug(true);
-			_mailSessions.put(as.getAccount().getId(), userSession);
+			_mailSessions.put(as.getAccountID(), userSession);
 		}
 		System.err.println("returning existing session for user");
 		
-		return _mailSessions.get(as.getAccount().getId());
+		return _mailSessions.get(as.getAccountID());
 	}
 	
 	@Override
 	public void clearSession(IAccountService as) {
-		
-		Session s = _mailSessions.remove(as.getAccount().getId());
+		Session s = _mailSessions.remove(as.getAccountID());
+		try {
+			s.getStore().close();
+		} catch (MessagingException e) {
+			
+		}
 		s = null;
 	}
 	
@@ -74,6 +79,8 @@ public class MailSessionImpl implements IMailSession {
 				break;
 			case pop3s:
 				props.setProperty("mail.store.protocol", as.getAccount().getProtocol().name());
+			    props.setProperty("mail.pop3.ssl.enable", "true");
+
 				break;
 			default:
 				break;

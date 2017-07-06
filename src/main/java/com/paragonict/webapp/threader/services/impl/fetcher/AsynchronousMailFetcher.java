@@ -16,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.paragonict.webapp.threader.entities.LocalMessage;
+import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.pop3.POP3Folder;
 
 /**
  * Autonomous mail fetcher, is run in separate thread
@@ -31,7 +34,6 @@ public class AsynchronousMailFetcher implements Invokable<Boolean> {
 	private final Store store;
 	private final Session session;
 	private final List<String> UIDs;
-	private final TypeCoercer tc;
 	private final int nrOfMsgsOnServer;
 	
 	public AsynchronousMailFetcher(final TypeCoercer tc,final Session session,final Store store, final FetcherKey key,List<String> UIDs, int nrOfMsgsOnServer) {
@@ -39,7 +41,6 @@ public class AsynchronousMailFetcher implements Invokable<Boolean> {
 		this.store = store;
 		this.key = key;
 		this.UIDs = UIDs;
-		this.tc = tc;
 		this.nrOfMsgsOnServer = nrOfMsgsOnServer;
 	}
 
@@ -68,42 +69,51 @@ public class AsynchronousMailFetcher implements Invokable<Boolean> {
 					f.open(javax.mail.Folder.READ_ONLY); // read only
 				} 
 				
+				
 				final Message[] msgs = f.getMessages();
 				final FetchProfile fp = new FetchProfile();
 				fp.add(javax.mail.UIDFolder.FetchProfileItem.UID);
 				f.fetch(msgs, fp);
 				
-				LocalMessage possiblyNewMsg = null;
-					
-				List<Message> workingList = Arrays.asList(msgs);
-				// use a counter
-				Transaction tx;
-				for (int i=0;i<msgs.length;i++) {
-					currentMessage = workingList.get(i);
 				
+				for (Message m: msgs) {
+					System.err.println(" msg: date; " + m.getSubject());
+				} 
+				
+				
+				// the order is in which they arrived..
+				
+				final List<Message> workingList = Arrays.asList(msgs);
+				// process the messagelist in order received and process every message
+				workingList.stream().forEach(m -> {
 					// determine UID of currentMessage
 					// filter the message we already have
-					possiblyNewMsg = new LocalMessage(tc,currentMessage, key.getAccountId());
-					
-					if (UIDs.contains(possiblyNewMsg.getUID())) {
-						logger.debug("Message with UID {} already stored, skipping",possiblyNewMsg.getUID());
-					} else {
-						// ah new mssg
-						logger.debug("Adding new localmessage from {} ",currentMessage);
-						//create short lived transaction
-						tx = session.beginTransaction();
-						session.persist(possiblyNewMsg);
-						tx.commit();
-						nrofDBRows++;
+					try {
+						
+						String UID;
+						if (m.getFolder() instanceof POP3Folder) {
+							UID = ((POP3Folder)m.getFolder()).getUID(m);
+						} else {
+							UID = "" + ((IMAPFolder)m.getFolder()).getUID(m);
+						}
+						if (UIDs.contains(UID)) {
+							logger.debug("Message with UID {} already stored, skipping",UID);
+						} else {
+							// ah new mssg
+							LocalMessage possiblyNewMsg = null;//moved createLocalMessage(m, UID,key.getAccountId());
+							logger.debug("Adding new localmessage from {} with date {}",m,possiblyNewMsg.getReceivedDate());
+							//create short lived transaction
+							Transaction tx = session.beginTransaction();
+							session.persist(possiblyNewMsg);
+							tx.commit();
+						}
+						UIDs.remove(UID); // remove from list	
+						
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					UIDs.remove(possiblyNewMsg.getUID()); // remove from list
-
-					if (nrOfMsgsOnServer <= nrofDBRows) {
-						logger.info("Local number of messages {} equals the number of messages on server {}, skipping fetch at pos {}.",nrofDBRows,nrOfMsgsOnServer,i);
-						break;
-					}
-					
-				}
+				});
 				f.close(false);// close folder, dont expunge
 	        }
 		} catch(Exception e ) {
@@ -140,4 +150,23 @@ public class AsynchronousMailFetcher implements Invokable<Boolean> {
 		
 		return true;
 	}
+	
+	/**
+    * Check whether the email store has the sort capability or not.
+    *
+    * @param store Email store
+    * @return true if the store is an IMAP store and it has the store capability
+    * @throws MessagingException In case capability check fails
+    */
+   private boolean hasSortCapability(Store store) throws MessagingException {
+       if (store instanceof IMAPStore) {
+           IMAPStore imapStore = (IMAPStore) store;
+           if (imapStore.hasCapability("SORT*")) {
+               return true;
+           }
+       }
+       return false;
+   }
+   
+   
 }

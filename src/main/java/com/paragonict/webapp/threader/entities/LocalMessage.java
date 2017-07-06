@@ -2,19 +2,10 @@ package com.paragonict.webapp.threader.entities;
 
 import java.util.Date;
 
-import javax.mail.Message;
-import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
 import javax.persistence.Entity;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.QueryHint;
-
-import org.apache.tapestry5.ioc.services.TypeCoercer;
-
-import com.paragonict.webapp.threader.Utils;
-import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.pop3.POP3Folder;
 
 /*
  * local copy of a pop3/imap message linked by uid (String for POP3 and Long for IMAP) , as String in DB
@@ -67,42 +58,7 @@ public class LocalMessage extends AbstractIdEntity {
 	private Date sentDate;
 	private Date receivedDate;
 	
-	public LocalMessage(final TypeCoercer tc,final Message message,final Long accountId) throws MessagingException {
-		if (message.getFolder() instanceof POP3Folder) {
-			UID = ((POP3Folder)message.getFolder()).getUID(message);
-			
-			String dateLines[] = message.getHeader("Date")[0].split("\\r?\\n");
-			for (String line:dateLines) {
-				try {
-					sentDate = tc.coerce(line, Date.class);
-					break;// yes
-				} catch (RuntimeException e) {
-					// booh
-				}
-			}
-			String receivedLines[] = message.getHeader("Received")[0].split("\\r?\\n");
-			for (String line:receivedLines) {
-				try {
-					receivedDate = tc.coerce(line, Date.class);
-					break;// yes
-				} catch (RuntimeException e) {
-					// booh
-				}
-			}
-			System.err.println(" sentDAte" + sentDate);	
-			System.err.println(" recDAte" + receivedDate);
-			
-		} else {
-			UID = "" + ((IMAPFolder)message.getFolder()).getUID(message);
-			sentDate = message.getSentDate();
-			receivedDate = message.getReceivedDate();
-		}
-		folder = message.getFolder().getFullName();
-		fromAdr = Utils.toString(message.getFrom());
-		toAdr = Utils.toString(message.getRecipients(RecipientType.TO)[0]);
-		subject = message.getSubject();
-		account = accountId;
-	}
+	private boolean isMessageRead;
 	
 	public LocalMessage() {
 		// for hibernate, keep in mind the reference to the org. msg is GONE
@@ -187,4 +143,13 @@ public class LocalMessage extends AbstractIdEntity {
 	public void setSubject(String subject) {
 		this.subject = subject;
 	}
+
+	public boolean getMessageRead() {
+		return isMessageRead;
+	}
+
+	public void setMessageRead(boolean isMessageRead) {
+		this.isMessageRead = isMessageRead;
+	}
+
 }

@@ -1,6 +1,5 @@
 package com.paragonict.webapp.threader.components;
 
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;
 import org.apache.tapestry5.EventConstants;
-import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.Import;
@@ -23,6 +21,7 @@ import org.apache.tapestry5.annotations.Property;
 import org.apache.tapestry5.annotations.SessionState;
 import org.apache.tapestry5.annotations.SetupRender;
 import org.apache.tapestry5.corelib.components.Grid;
+import org.apache.tapestry5.corelib.components.Zone;
 import org.apache.tapestry5.grid.ColumnSort;
 import org.apache.tapestry5.grid.GridDataSource;
 import org.apache.tapestry5.internal.util.Holder;
@@ -31,6 +30,7 @@ import org.apache.tapestry5.services.BeanModelSource;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 import org.chenillekit.tapestry.core.components.AjaxCheckbox;
 
+import com.paragonict.tapisser.growl.Message;
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
@@ -54,12 +54,15 @@ public class Messages extends BaseComponent {
 	
 	@Inject
 	private BeanModelSource bms;
-	
-	@Inject
-	private AlertManager am;
-	
+
 	@Component
 	private Grid messageGrid;
+	
+	@Component
+	private Zone gridzone;
+	
+	@Component
+	private Zone nullZone;
 	
 	@Property
 	private LocalMessage message;
@@ -72,6 +75,9 @@ public class Messages extends BaseComponent {
 	
 	@Persist
 	private String lastFolderSelected;
+	
+	@Persist
+	private Integer currentNumberOfMsgs;
 	
 	@SetupRender
 	private void setup() {
@@ -126,12 +132,12 @@ public class Messages extends BaseComponent {
 				
 			}
 			*/
-			am.info("Deleted selected messages");
+			addGrowlerMessage(new Message("Deleted selected messages"));
 			//trigger ajax reload
 			
 			return getResources().getBlock("messageblock");
 		} else {
-			am.info("No messages selected");
+			addGrowlerMessage(new Message("No messages selected"));
 			return null;
 		}
 	}
@@ -145,20 +151,18 @@ public class Messages extends BaseComponent {
 			} else {
 				selectedIDs.add(id);
 			}
-		} else {
-			// session expired..
-			am.warn(MessageFormat.format("Could not select msg with id {}, session invalid or expired",id));
-			// TODO: make sure this message appears as response on the current AJAX request and not AFTER this!
-		}
+		} 
 	}
 	
 	@Cached
 	public GridDataSource getMessageSource() throws MessagingException {
+		GridMessageSource source = null;
 		if (getFolderSelected()) {
 			final String selectedFolder = sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER);
-			return new GridMessageSource(service,selectedFolder);
+			source = new GridMessageSource(service,getLogger(),selectedFolder);
+			currentNumberOfMsgs = source.getAvailableRows();
 		}
-		return null;
+		return source;
 	}
 	
 	
@@ -168,10 +172,6 @@ public class Messages extends BaseComponent {
 	@Cached
 	public boolean getIsOutGoing() {
 		return sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER).equalsIgnoreCase("DRAFTS");
-	}
-	
-	public boolean getMessageRead() throws MessagingException {
-		return service.isMessageRead(message);
 	}
 	
 	/* display properties */
@@ -229,5 +229,25 @@ public class Messages extends BaseComponent {
 			})) {
 			arr.addRender("contentZone", holder.get());
 		} 
+	}
+	
+	/*
+	 * handle auto-refresh
+	 * 
+	 */
+	@OnEvent(value="refresh")
+	private Object checkForNewMessages() {
+		try {
+			if (currentNumberOfMsgs != service.getNrOfMessages(lastFolderSelected)) {
+				System.err.println("There are NEW messages");
+				return gridzone;
+			} else {
+				System.err.println("no new msgs on refresh");
+			}
+		} catch (MessagingException e) {
+			System.err.println("Could not check is there are new messages, due to " + e.getMessage());
+		}
+		return nullZone;
+	
 	}
 }

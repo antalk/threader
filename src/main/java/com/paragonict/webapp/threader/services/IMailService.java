@@ -36,8 +36,6 @@ public interface IMailService {
 	
 	public String getMessageContent(final LocalMessage message) throws IOException,MessagingException;
 	
-	public boolean isMessageRead(final LocalMessage message) throws MessagingException;
-	
 	/**
 	 * Tries to delete the mail message on the mail server ( if it exists)
 	 * also removes the messages from the local db, if exist
@@ -47,7 +45,4 @@ public interface IMailService {
 	 * @return true or false
 	 */
 	public boolean deleteMailMessage(final Long... ids) throws MessagingException;
-	
-	
-
 }

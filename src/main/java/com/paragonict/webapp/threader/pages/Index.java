@@ -8,7 +8,6 @@ import javax.mail.MessagingException;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.EventContext;
-import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.OnEvent;
 import org.apache.tapestry5.annotations.Property;
@@ -32,9 +31,6 @@ public class Index extends AuthenticatedPage {
 	
 	@Inject
 	private IMailStore ms;
-	
-	@Inject
-	private AlertManager am;
 	
 	@Component
 	private Zone folderZone;
@@ -159,4 +155,5 @@ public class Index extends AuthenticatedPage {
 		return getResources().getBlock("loginblock");
 	}
 		
+	
 }

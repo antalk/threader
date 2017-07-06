@@ -17,11 +17,9 @@ import org.apache.commons.lang.CharEncoding;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.validator.routines.EmailValidator;
-import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventConstants;
 import org.apache.tapestry5.OptionModel;
 import org.apache.tapestry5.SelectModel;
-import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.Import;
@@ -42,14 +40,15 @@ import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import com.paragonict.tapisser.growl.Message;
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
+import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.Contact;
 import com.paragonict.webapp.threader.entities.DraftContent;
 import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.pages.Index;
-import com.paragonict.webapp.threader.services.IAccountService;
 import com.paragonict.webapp.threader.services.IMailService;
 import com.sun.mail.smtp.SMTPMessage;
 
@@ -61,7 +60,7 @@ import com.sun.mail.smtp.SMTPMessage;
  */
 @RequiresLogin
 @Import(library="MailComposer.js")
-public class MailComposer {
+public class MailComposer extends BaseComponent {
 	
 	enum COMPOSEACTION {
 		send,
@@ -69,22 +68,13 @@ public class MailComposer {
 	}
 	
 	@Inject
-	private IAccountService as;
-	
-	@Inject
 	private IMailService ms;
-	
-	@Inject
-	private AlertManager am;
 	
 	@Inject
 	private AjaxResponseRenderer arr;
 	
 	@Inject
 	private HibernateSessionManager hsm;
-	
-	@Inject
-	private ComponentResources resources;
 	
 	@SessionState
 	private SessionStateObject sso;
@@ -125,7 +115,7 @@ public class MailComposer {
 		if (sso.hasValue(SESSION_ATTRS.DRAFT_ID)) {
 			draft = (LocalMessage) hsm.getSession().load(LocalMessage.class, sso.getLongValue(SESSION_ATTRS.DRAFT_ID));
 			// retrieve content once
-			final DraftContent dc = (DraftContent) hsm.getSession().get(DraftContent.class, sso.getLongValue(SESSION_ATTRS.DRAFT_ID));
+			final DraftContent dc = (DraftContent) hsm.getSession().getNamedQuery(DraftContent.GETDRAFTFORMSG).setEntity("localMessage", draft).uniqueResult();
 			if (dc != null) {
 				try {
 					if (StringUtils.isNotEmpty(dc.getContent())) {
@@ -142,8 +132,8 @@ public class MailComposer {
 		if (draft == null) {
 			
 			draft = new LocalMessage();
-			draft.setAccount(as.getAccount().getId());
-			draft.setFromAdr(as.getAccount().getEmailAddress());
+			draft.setAccount(getAccountService().getAccountID());
+			draft.setFromAdr(getAccountService().getAccount().getEmailAddress());
 			draft.setFolder("DRAFTS");
 			hsm.getSession().persist(draft);
 			hsm.commit();
@@ -156,7 +146,7 @@ public class MailComposer {
 	
 	@Cached
 	public SelectModel getAddressBookModel() {
-		final List<Contact> contacts = hsm.getSession().createCriteria(Contact.class).add(Restrictions.eq("owner", as.getAccount())).list();
+		final List<Contact> contacts = hsm.getSession().createCriteria(Contact.class).add(Restrictions.eq("owner", getAccountService().getAccount())).list();
 		
 		final StringBuilder addressBuilder = new StringBuilder();
 		
@@ -244,21 +234,22 @@ public class MailComposer {
 			}
 			
 		}
-		return null;
+		return null; // continue to SUCCESS event
 	}
 	
 	@OnEvent(component="mailEditForm",value=EventConstants.SUCCESS)
 	private Object handleFormSucces () {
 		switch (action) {
 		case send :{
-			hsm.getSession().delete(hsm.getSession().load(LocalMessage.class,getMsg().getId()));
-			// also delete draft contents if any
-			
-			final DraftContent df = (DraftContent) hsm.getSession().get(DraftContent.class,getMsg().getId());
+			// first delete draft
+			final DraftContent df = (DraftContent) hsm.getSession().getNamedQuery(DraftContent.GETDRAFTFORMSG).setEntity("localMessage", getMsg()).uniqueResult();
 			if (df != null) {
 				hsm.getSession().delete(df);
+				// becasue of Casade. the localmessage will alsobe removed?
 			}
-				
+			// also delete message
+			hsm.getSession().delete(hsm.getSession().load(LocalMessage.class,getMsg().getId()));
+			
 			hsm.commit();
 			sso.clearValue(SESSION_ATTRS.DRAFT_ID);
 			
@@ -270,11 +261,11 @@ public class MailComposer {
 					
 				}
 			});
-			am.info("Message sent");
+			addGrowlerMessage(new Message("Message sent"));
 			return Index.class;	
 		}
 		case save :{
-			hsm.getSession().persist(getMsg());
+			hsm.getSession().saveOrUpdate(getMsg());
 			// use GET , can return null
 			final Criteria crit = hsm.getSession().createCriteria(DraftContent.class);
 			crit.add(Restrictions.eq("localMessage", getMsg()));
@@ -292,12 +283,10 @@ public class MailComposer {
 			}
 			hsm.getSession().saveOrUpdate(dc);
 			hsm.commit();
-			return null;
+			addGrowlerMessage(new Message("Draft saved"));
 		}
 		}
-		return null;
-		
-		
+		return maileditzone;
 	}
 	
 	
@@ -305,10 +294,10 @@ public class MailComposer {
 	private void addToAddressBook(@RequestParameter("addedvalue") String address) {
 		
 		if (EmailValidator.getInstance().isValid(address)) {
-			Contact newContact = (Contact) hsm.getSession().createCriteria(Contact.class).add(Restrictions.eq("mailAddress", address)).add(Restrictions.eq("owner", as.getAccount())).uniqueResult();
+			Contact newContact = (Contact) hsm.getSession().createCriteria(Contact.class).add(Restrictions.eq("mailAddress", address)).add(Restrictions.eq("owner", getAccountService().getAccount())).uniqueResult();
 			if (newContact == null) {
 				newContact = new Contact();
-				newContact.setOwner(as.getAccount());
+				newContact.setOwner(getAccountService().getAccount());
 				newContact.setMailAddress(address);
 				hsm.getSession().save(newContact);
 				hsm.commit();

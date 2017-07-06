@@ -3,17 +3,18 @@ package com.paragonict.webapp.threader.base;
 
 import org.apache.tapestry5.ComponentResources;
 import org.apache.tapestry5.EventContext;
-import org.apache.tapestry5.alerts.AlertManager;
-import org.apache.tapestry5.annotations.Property;
+import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.SessionState;
+import org.apache.tapestry5.corelib.components.Zone;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.ioc.annotations.Inject;
 import org.apache.tapestry5.services.PageRenderLinkSource;
 import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
 import org.slf4j.Logger;
 
+import com.paragonict.tapisser.components.Growler;
+import com.paragonict.tapisser.growl.Message;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
-import com.paragonict.webapp.threader.services.IApplicationError;
 
 /*
  * A page which provides a lot of injected services 
@@ -36,17 +37,19 @@ public abstract class BasicPage {
 	@Inject
 	private PageRenderLinkSource prls;
 	
-	@Inject
-	private AlertManager am;
-	
-	@Property
-	@Inject
-	private IApplicationError appErrors;
-	
 	@SessionState
 	private SessionStateObject sso;
 	
+	@Component
+	private Growler growl;
+	
+	@Component
+	private Zone growlZone;
+	
+	private boolean growlerAdded = false;
+	
 	private final Object onActivate(final EventContext ec) {
+		
 		return handleEventContext(ec);
 	}
 
@@ -94,11 +97,21 @@ public abstract class BasicPage {
 		return logger;
 	}
 	
-	public AlertManager getAm() {
-		return am;
-	}
-
 	public Object handleEventContext(final EventContext ec) {
 		return null;
+	}
+	
+	public void addGrowlerMessage(final Message msg) {
+		if (!growlerAdded) {
+			// if you are getting access to the growler,, add it to the ajaxresponse renderer.. 
+			// coz you probably want to show your added messages ?!
+			
+			System.err.println("Activating growler");
+			
+			arr.addRender(growlZone);
+			growlerAdded = true; // true for this thread/request
+
+		}
+		growl.addMessage(msg);
 	}
 }

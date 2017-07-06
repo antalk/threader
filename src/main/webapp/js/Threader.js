@@ -153,12 +153,3 @@ function selectFolder(id,nrofunreadmsgs) {
 	}
 	
 }
-
-function renderAppErrors(errList) {
-	var alertsDiv = $('appAlerts');
-	var alerts = alertsDiv.down('div.alert');
-    for (var i= 0; i < errList.length; i++) {
-    	alerts.update(alerts.textContent + errList[i] + '<br/>');
-    }
-	alertsDiv.toggle(true);
-}

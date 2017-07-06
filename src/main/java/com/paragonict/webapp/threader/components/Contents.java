@@ -18,12 +18,12 @@ import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.internal.util.Holder;
 import org.apache.tapestry5.ioc.annotations.Inject;
 
+import com.paragonict.tapisser.growl.Message.LEVEL;
 import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
 import com.paragonict.webapp.threader.entities.LocalMessage;
-import com.paragonict.webapp.threader.services.IApplicationError;
 import com.paragonict.webapp.threader.services.IMailService;
 
 @RequiresLogin
@@ -37,12 +37,9 @@ public class Contents extends BaseComponent {
 	
 	@Inject
 	private HibernateSessionManager hsm;
-	
-	@Inject
-	private IApplicationError appErrors;
-	
+		
 	@Property
-	private String messagecontent;
+	private String messageContent;
 	
 	public boolean getMessageSelected() {
 		return (sso.hasValue(SESSION_ATTRS.SELECTED_MSG_ID) &&
@@ -55,20 +52,29 @@ public class Contents extends BaseComponent {
 			// retrieve message
 			LocalMessage lm = ms.getLocalMessage(sso.getLongValue(SESSION_ATTRS.SELECTED_MSG_ID));
 			if (lm != null) {
-				final Message m = ms.getMailMessage(lm);
-				if (m==null) {
-					lm = null;
-					appErrors.addApplicationError("Message was not on the server anymore");
+					final Message m = ms.getMailMessage(lm);
+					if (m==null) {
+						lm = null;
+						addGrowlerMessage(new com.paragonict.tapisser.growl.Message(LEVEL.ERROR,"Message was not on the server anymore"));
 				}
 				return lm;
 			}
-			
 		}
 		return null;
 	}
+	
 	@OnEvent(value=EventConstants.PROGRESSIVE_DISPLAY,component="loadMessageContent")
 	public void loadMessageContent() throws MessagingException, IOException {
-		messagecontent = ms.getMessageContent(getMessage());
+		messageContent = ms.getMessageContent(getMessage());
+		
+		/*
+		
+		Whitelist wl = Whitelist.basicWithImages();
+		wl.removeAttributes("a", "href");
+		Cleaner clean = new Cleaner(wl);
+		clean.
+		*/
+		//return messageContent;
 	}
 	
 	
@@ -76,9 +82,15 @@ public class Contents extends BaseComponent {
 	private Block loadMessage() throws MessagingException {
 		final LocalMessage lm = getMessage();
 		if (lm != null) {
-			ms.getMailMessage(lm).setFlag(Flag.SEEN, true);
+			if (!lm.getMessageRead()) {
+				ms.getMailMessage(lm).setFlag(Flag.SEEN, true);
+				lm.setMessageRead(true);
+				hsm.getSession().saveOrUpdate(lm);
+				hsm.commit();
+			}
+			
 		} else {
-			appErrors.addApplicationError("Please select a message first");
+			addGrowlerMessage(new com.paragonict.tapisser.growl.Message(LEVEL.ERROR,"Please select a message first"));
 		}
 		return getResources().getBlock("contentblock");
 	}
@@ -87,9 +99,14 @@ public class Contents extends BaseComponent {
 	private Block markMessageAsUnread() throws MessagingException {
 		final LocalMessage lm = getMessage();
 		if (lm != null) {
-			ms.getMailMessage(lm).setFlag(Flag.SEEN, false);
+			if (lm.getMessageRead()) {
+				ms.getMailMessage(lm).setFlag(Flag.SEEN, false);
+				lm.setMessageRead(false);
+				hsm.getSession().saveOrUpdate(lm);
+				hsm.commit();
+			}
 		} else {
-			appErrors.addApplicationError("Please select a message first");
+			addGrowlerMessage(new com.paragonict.tapisser.growl.Message(LEVEL.ERROR,"Please select a message first"));
 		}
 		return getResources().getBlock("contentblock");
 	}
@@ -153,14 +170,7 @@ public class Contents extends BaseComponent {
 			})) {
 			return holder.get();
 		} 
-		appErrors.addApplicationError("Could not create new message");
+		addGrowlerMessage(new com.paragonict.tapisser.growl.Message(LEVEL.ERROR,"Could not create new message"));
 		return null;// TODO: check and fix
 	}
-	
-	public boolean getMessageRead() throws MessagingException {
-		return ms.getMailMessage(getMessage()).getFlags().contains(Flag.SEEN);
-	}
-	
-	
-	
 }

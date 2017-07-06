@@ -7,7 +7,6 @@ import java.util.List;
 import javax.mail.MessagingException;
 
 import org.apache.tapestry5.ValueEncoder;
-import org.apache.tapestry5.alerts.AlertManager;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.OnEvent;
@@ -40,9 +39,6 @@ public class Folders extends BaseComponent {
 	
 	@Inject
 	private AjaxResponseRenderer arr;
-	
-	@Inject 
-	private AlertManager am;
 	
 	@SessionState
 	private SessionStateObject sso;

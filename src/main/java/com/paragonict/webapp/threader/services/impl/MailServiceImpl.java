@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.mail.FetchProfile;
-import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -34,7 +33,6 @@ import com.paragonict.webapp.threader.entities.Account.PROTOCOL;
 import com.paragonict.webapp.threader.entities.Folder;
 import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IAccountService;
-import com.paragonict.webapp.threader.services.IApplicationError;
 import com.paragonict.webapp.threader.services.IMailFetcher;
 import com.paragonict.webapp.threader.services.IMailService;
 import com.paragonict.webapp.threader.services.IMailSession;
@@ -72,9 +70,6 @@ public class MailServiceImpl implements IMailService {
 	
 	@Inject
 	private LoggerSource logSource;
-	
-	@Inject
-	private IApplicationError appErrors;
 	
 	@Inject
 	private IMailFetcher fetcher;
@@ -199,17 +194,21 @@ public class MailServiceImpl implements IMailService {
 			// and remote deletes will show up when you try to open the message.
 			
 			
-			
 			// this will return when we have enough localmessages to query for..
-			fetcher.isInSync(folder, end, mailTotal);
+			// if for the first time, then ALL messages have to be read. as they are in completely random order...
+			fetcher.isInSync(folder, start, end, mailTotal);
 	        
 			// now query, TODO: ordering and filtering /search can only be done on the COMPLETE set of rows.. not the subset returning
 			// TODO a new session is required... has something todo with the update in the OTHER session (asyncfetcher)
 			final Session s = hss.create();
 			final Criteria criteria = s.createCriteria(LocalMessage.class);
 			criteria.add(Restrictions.eq("folder", folder.toUpperCase()));
-			criteria.add(Restrictions.eq("account", as.getAccount().getId()));
-			criteria.addOrder(Order.desc("sentDate"));
+			criteria.add(Restrictions.eq("account", as.getAccountID()));
+			
+			// receiveddate for INBOX
+			// senddate for outbox ?
+			// TODO: fix ordering based on given SortConstraint..
+			criteria.addOrder(Order.desc("receivedDate"));
 			
 			//criteria.setFirstResult(start).setMaxResults((end+1)-start);
 			try {
@@ -230,14 +229,13 @@ public class MailServiceImpl implements IMailService {
 				// get nr of message locally stored only
 				return ((Long) hsm.getSession().createCriteria(LocalMessage.class)
 						.add(Restrictions.eq("folder", folder.toUpperCase()))
-						.add(Restrictions.eq("account", as.getAccount().getId()))
+						.add(Restrictions.eq("account", as.getAccountID()))
 						.setProjection(Projections.rowCount()).uniqueResult()).intValue();
 			}
 		}
 		// IMAP(S) or INBOX
 		if (folder != null) {
 			javax.mail.Folder f  = store.getFolder(folder);
-			f.open(javax.mail.Folder.READ_ONLY);
 			return f.getMessageCount();
 		}
 		return 0;
@@ -263,21 +261,14 @@ public class MailServiceImpl implements IMailService {
 				logger.trace("Element {} is in cache, fetch objectValue",e);
 					
 				final Message msg = (Message) e.getObjectValue();
-				final javax.mail.Folder f = msg.getFolder();
-				if (!f.isOpen()) {
-					logger.debug("folder {} is not open for (cached) message {}",f,msg);
-					store.registerFolder(f);
-					f.open(javax.mail.Folder.READ_WRITE);
-				}
+				store.registerFolder(msg.getFolder());
 				return msg;
 			}
 		}
 		
 		// the folder NEEDS to be open when accessing the retrieved message.. even if it lives in cache!
 		javax.mail.Folder f = store.getFolder(folderName);
-		if (!f.isOpen()) {
-			f.open(javax.mail.Folder.READ_WRITE); // read write otherwise we cant set flags the referenced message object..
-		}
+		
 		
 		Message message = null;
 		
@@ -300,7 +291,6 @@ public class MailServiceImpl implements IMailService {
 			}
 		}
 		if (message == null) {
-			appErrors.addApplicationError("Message was not on the server anymore");
 			// TODO:/ delete this LocalMessage from DB?
 			
 			hsm.getSession().delete(localMsg);
@@ -313,19 +303,6 @@ public class MailServiceImpl implements IMailService {
 		return message;
 	}
 
-	@Override
-	public boolean isMessageRead(LocalMessage message) throws MessagingException {
-		if (isRemoteFolder(message.getFolder())) {
-			final Message orgMsg = getMailMessage(message);
-			if (orgMsg!=null) {
-				return orgMsg.getFlags().contains(Flag.SEEN);	
-			}
-			appErrors.addApplicationError("Message is not on server anymore");
-		}
-		return false; // cant determine.
-		
-	}
-
 	/* TODO: make this transactional and more robust..*/
 	@Override
 	public boolean deleteMailMessage(final Long... IDs) throws MessagingException {
@@ -334,13 +311,15 @@ public class MailServiceImpl implements IMailService {
 			
 			
 			LocalMessage lm = null;
-			final List<Message> remoteMsgsToDelete = new ArrayList<Message>();
+			//final List<Message> remoteMsgsToDelete = new ArrayList<Message>();
 			
 			for (Long ID : IDs) {
 				try {
 					lm = getLocalMessage(ID);
 					if (isRemoteFolder(lm.getFolder())) {
-						remoteMsgsToDelete.add(getMailMessage(lm));
+						getMailMessage(lm).setFlag(Flag.DELETED, true);
+						//remoteMsgsToDelete.add(getMailMessage(lm));
+							// TODO DOES NOT WORKR ! nothign gets removed!!!@!@!@
 					}
 					// remove from db also
 					hsm.getSession().delete(lm);
@@ -351,6 +330,7 @@ public class MailServiceImpl implements IMailService {
 			}
 			hsm.commit();
 			
+			/*
 			if (!remoteMsgsToDelete.isEmpty()) {
 				
 				final Flags deleted = new Flags(Flag.DELETED);
@@ -365,7 +345,7 @@ public class MailServiceImpl implements IMailService {
 					// TODO try saving my messages???
 					e.printStackTrace();
 				}
-			}
+			}*/
 
 		}		
 		return result;
@@ -374,7 +354,7 @@ public class MailServiceImpl implements IMailService {
 	/**
      * Return the primary text content of the message.
      * Copied from the interwebs
-     */
+     */	
 	public String getMessageContent(final LocalMessage m) {
 		try {
 			final MimeMessageParser mmp = new MimeMessageParser((MimeMessage) getMailMessage(m));
@@ -396,7 +376,7 @@ public class MailServiceImpl implements IMailService {
 	// use this method to get a cache for the current user based on email address
 	private Cache getCache(final LocalMessage localMessage) {
 		// security check
-		if (!(localMessage.getAccount().compareTo(as.getAccount().getId()) == 0)) {
+		if (!(localMessage.getAccount().compareTo(as.getAccountID()) == 0)) {
 			//  It is NOT your message !
 			throw new TapestryException("[Security] Requested message does not belong to current user !", this, new IllegalAccessException());
 		}

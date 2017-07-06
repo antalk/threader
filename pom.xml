@@ -145,6 +145,14 @@
 			<artifactId>apache-mime4j-dom</artifactId>
 			<version>0.7.2</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
+		<dependency>
+		    <groupId>org.jsoup</groupId>
+		    <artifactId>jsoup</artifactId>
+		    <version>1.10.1</version>
+		</dependency>
+
+		
 		
 		<dependency>
 			<groupId>net.sf.ehcache</groupId>
@@ -154,7 +162,7 @@
 		<dependency>
 			<groupId>com.paragonict</groupId>
 			<artifactId>tapisser</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.chenillekit</groupId>

@@ -6,5 +6,7 @@ public interface IAccountService {
 
 	public boolean isLoggedIn();
 	
+	public Long getAccountID();
+	
 	public Account getAccount();
 }

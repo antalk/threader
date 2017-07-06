@@ -5,9 +5,11 @@
 
 
 	<div class="container-fluid">
-		<div class="well-sm">
-    		<t:alerts/>
-    	</div>
+			<!--  growler as the default alert manager/popup , in a zone so we can render it using AjaxResponseRenderer-->
+	<t:zone t:id="growlZone" id="growlZone">
+		<t:tapisser.growler t:id="growl" />
+	</t:zone>
+
 	
     	<t:tapisser.Datatable source="contacts" searchColumns="name,mailAddress" add="action" row="contact" rowType="rowType">
     		<p:actionCell>

@@ -1,84 +1,94 @@
 <html t:type="layout"
-      xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
-      xmlns:p="tapestry:parameter">
+	xmlns:t="http://tapestry.apache.org/schema/tapestry_5_1_0.xsd"
+	xmlns:p="tapestry:parameter">
 
 <!-- Begin page content -->
-    <div class="container-fluid">
-      <t:delegate to="activeblock"/>
-    </div>
-      
-    <t:block t:id="main">
-      
-      	<div class="well-sm">
-    		<t:alerts/>
-    	</div>
-	      
-   	      <div class="panel">
-   	      	  <!-- show recoverable app errors once -->
-   	      	 <div id="appAlerts" style="display: none;">
-	   	      	 <div class="alert alert-danger" role="alert">
-	   	      	 </div>
-   	      	 </div>
-   	      	  
-			  <div class="col-md-2 scrollable">
-			  	<t:zone t:id="folderzone" id="folderzone">
-			  		<t:Folders/>
-			  	</t:zone>
-			  </div>
-			  <div class="col-md-4 scrollable">
-			  	<t:zone t:id="messageZone" id="messageZone">
-			  		<t:Messages t:id="messages" id="messages"/>
-			  	</t:zone>
-			  </div>
-			  <div class="col-md-6 scrollable">
-			  	<t:zone t:id="contentZone" id="contentZone">
-			  		<t:contents/>
-			  	</t:zone>
-			  </div>
+<div class="container-fluid">
+	<!--  growler as the default alert manager/popup , in a zone so we can render it using AjaxResponseRenderer-->
+	<t:zone t:id="growlZone" id="growlZone">
+		<t:tapisser.growler t:id="growl" />
+	</t:zone>
+
+	<t:delegate to="activeblock" />
+</div>
+
+<t:block t:id="main">
+
+	<div class="well-sm">
+		<t:alerts />
+	</div>
+
+	<div class="panel">
+
+		<div class="col-md-2 scrollable">
+			<t:zone t:id="folderzone" id="folderzone">
+				<t:Folders />
+			</t:zone>
 		</div>
-	</t:block>
-     
-	<t:block t:id="loginblock">
-		<div class="modal fade" id="loginmodal" >
-			  <div class="modal-dialog">
-			    <div class="modal-content">
-			      <div class="modal-header">
-			        <h4 class="modal-title">Login</h4>
-			      </div>
-			      <div class="modal-body">
-			      	<t:alerts/>
-			        <p>Login or create an account</p>
-			        	<t:form t:id="loginform" t:mixins="tapisser/Bootstrap">
-				        	<t:errors/>
-				        	<label>Email</label>
-				        	<t:textfield value="mail"/>
-				        	<label>Password</label>
-				        	<t:passwordfield value="password"/>
-				        	<p/>
-				        	<t:submit class="btn btn-primary" value="Login"/>
+		<div class="col-md-4 scrollable">
+			<t:zone t:id="messageZone" id="messageZone">
+				<t:Messages t:id="messages" id="messages" />
+			</t:zone>
+		</div>
+		<div class="col-md-6 scrollable">
+			<t:zone t:id="contentZone" id="contentZone">
+				<t:contents />
+			</t:zone>
+		</div>
+	</div>
+</t:block>
+
+<t:block t:id="loginblock">
+	<div class="modal fade" id="loginmodal">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title">Login</h4>
+				</div>
+				<div class="modal-body">
+					<p>Login or create an account</p>
+					<t:form t:id="loginform" t:mixins="tapisser/Bootstrap">
+						<t:errors />
+						<label>Email</label>
+						<t:textfield value="mail" />
+						<label>Password</label>
+						<t:passwordfield value="password" />
+						<p />
+						<t:submit class="btn btn-primary" value="Login" />
 				        	&nbsp;
 				        	<button class="btn">
-			        			<t:eventlink t:event="createAccount">Create account</t:eventlink>
-			        		</button>
-			        	</t:form>
-			        	
-			      </div>
-			    </div><!-- /.modal-content -->
-			  </div><!-- /.modal-dialog -->
-			</div><!-- /.modal -->
-			<script>
-				$T5_JQUERY('#loginmodal').modal({
-				  keyboard: false,
-				  backdrop :'static'
-				});
-			</script>
-	</t:block>
-	
-	<t:block t:id="composeBlock">	
-		<t:MailComposer/>
-	</t:block>
-	
-	<t:block t:id="ajaxLoader">
-		<div class="well"><img src="images/loader.gif"/>Loading...</div>
-	</t:block>
+							<t:eventlink t:event="createAccount">Create account</t:eventlink>
+						</button>
+					</t:form>
+
+				</div>
+			</div>
+			<!-- /.modal-content -->
+		</div>
+		<!-- /.modal-dialog -->
+	</div>
+	<!-- /.modal -->
+	<script>
+		$T5_JQUERY('#loginmodal').modal({
+			keyboard : false,
+			backdrop : 'static'
+		});
+	</script>
+</t:block>
+
+<t:block t:id="composeBlock">
+	<t:MailComposer />
+</t:block>
+
+<t:block t:id="ajaxLoader">
+	<div class="well">
+		<img src="images/loader.gif" />Loading...
+	</div>
+</t:block>
+
+<t:block t:id="sessionexpired">
+	<h3>ERROR</h3>
+	<pre>Cannot handle request, either no access or you are not logged in anymore</pre>
+</t:block>
+
 </html>

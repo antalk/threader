@@ -3,21 +3,14 @@ package com.paragonict.webapp.threader.services;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.tapestry5.ClientBodyElement;
 import org.apache.tapestry5.ComponentParameterConstants;
 import org.apache.tapestry5.ioc.MappedConfiguration;
 import org.apache.tapestry5.ioc.OrderedConfiguration;
 import org.apache.tapestry5.ioc.ScopeConstants;
 import org.apache.tapestry5.ioc.ServiceBinder;
 import org.apache.tapestry5.ioc.annotations.SubModule;
-import org.apache.tapestry5.json.JSONArray;
 import org.apache.tapestry5.services.ComponentRequestFilter;
-import org.apache.tapestry5.services.PartialMarkupRendererFilter;
-import org.apache.tapestry5.services.ajax.AjaxResponseRenderer;
-import org.apache.tapestry5.services.ajax.JSONCallback;
-import org.apache.tapestry5.services.ajax.JavaScriptCallback;
 import org.apache.tapestry5.services.javascript.JavaScriptStack;
-import org.apache.tapestry5.services.javascript.JavaScriptSupport;
 import org.chenillekit.tapestry.core.ChenilleKitCoreModule;
 
 import com.paragonict.tapisser.SymbolConstants;
@@ -25,7 +18,6 @@ import com.paragonict.tapisser.services.TapisserModule;
 import com.paragonict.webapp.threader.Constants;
 import com.paragonict.webapp.threader.services.filter.RequiresLoginFilter;
 import com.paragonict.webapp.threader.services.impl.AccountServiceImpl;
-import com.paragonict.webapp.threader.services.impl.ApplicationErrorImpl;
 import com.paragonict.webapp.threader.services.impl.MailFetcherImpl;
 import com.paragonict.webapp.threader.services.impl.MailServiceImpl;
 import com.paragonict.webapp.threader.services.impl.MailSessionImpl;
@@ -46,8 +38,7 @@ public class ThreaderModule
         binder.bind(IMailFetcher.class,MailFetcherImpl.class); // singleton
         binder.bind(IMailStore.class,MailStoreImpl.class).scope(ScopeConstants.PERTHREAD);
         binder.bind(IAccountService.class,AccountServiceImpl.class).scope(ScopeConstants.PERTHREAD);
-        binder.bind(IApplicationError.class,ApplicationErrorImpl.class).scope(ScopeConstants.PERTHREAD);
-    }
+   }
 
     public static void contributeFactoryDefaults(
             MappedConfiguration<String, Object> configuration) {
@@ -133,55 +124,5 @@ public class ThreaderModule
         System.err.println("Coercer config: "+ configuration);
     }*/
     
-    public AjaxResponseRenderer decorateAjaxResponseRenderer(final AjaxResponseRenderer delegate,final IApplicationError appErrors) {
-      return new AjaxResponseRenderer() {
-		
-		@Override
-		public AjaxResponseRenderer addRender(String clientId, Object renderer) {
-			if (!appErrors.getApplicationErrors().isEmpty()) {
-				delegate.addCallback(new JavaScriptCallback() {
-					
-					@Override
-					public void run(JavaScriptSupport javascriptSupport) {
-						javascriptSupport.addScript("renderAppErrors(%s)",new JSONArray(appErrors.getApplicationErrors()));
-					}
-				});
-			}
-			return delegate.addRender(clientId,renderer);
-		}
-		
-		@Override
-		public AjaxResponseRenderer addRender(ClientBodyElement zone) {
-			if (!appErrors.getApplicationErrors().isEmpty()) {
-				delegate.addCallback(new JavaScriptCallback() {
-					
-					@Override
-					public void run(JavaScriptSupport javascriptSupport) {
-						javascriptSupport.addScript("renderAppErrors(%s)",new JSONArray(appErrors.getApplicationErrors()));
-					}
-				});
-			}
-			return delegate.addRender(zone);
-		}
-		
-		@Override
-		public AjaxResponseRenderer addFilter(PartialMarkupRendererFilter filter) {
-			return delegate.addFilter(filter);
-		}
-		
-		@Override
-		public AjaxResponseRenderer addCallback(JSONCallback callback) {
-			return delegate.addCallback(callback);
-		}
-		
-		@Override
-		public AjaxResponseRenderer addCallback(Runnable callback) {
-			return delegate.addCallback(callback);
-		}
-		
-		@Override
-		public AjaxResponseRenderer addCallback(JavaScriptCallback callback) {
-			return delegate.addCallback(callback);
-		}
-	};}
+ 
 }

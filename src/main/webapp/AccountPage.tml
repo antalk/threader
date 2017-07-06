@@ -4,6 +4,11 @@
 
 <!-- Begin page content -->
     <div class="container-fluid">
+    	<!--  growler as the default alert manager/popup , in a zone so we can render it using AjaxResponseRenderer-->
+	<t:zone t:id="growlZone" id="growlZone">
+		<t:tapisser.growler t:id="growl" />
+	</t:zone>
+    
     	<t:delegate to="activeblock"/>
  	</div>      
 

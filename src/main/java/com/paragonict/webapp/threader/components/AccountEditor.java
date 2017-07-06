@@ -17,6 +17,8 @@ import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.internal.TapestryInternalUtils;
 import org.apache.tapestry5.internal.util.Holder;
 import org.apache.tapestry5.ioc.annotations.Inject;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 
 import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.entities.Account;
@@ -76,32 +78,19 @@ public class AccountEditor extends BaseComponent {
 		return throwSuccesEvent();
 	}
 	
-	
-	/*
-	@OnEvent(component="accountcreate",value=EventConstants.VALIDATE)
-	private void validateNewAccount() {
-		validateAccount(getNewAccount(), accountcreate);
-	}
-	
-		
-		hsm.commit();
-		return throwSuccesEvent();
-	}
-	
-	@OnEvent(component="accountcreate",value=EventConstants.SUCCESS)
-	private Object createAccount() {
-		hsm.getSession().save(getNewAccount());
-		hsm.commit();
-		return throwSuccesEvent();
-	}
-	*/
-	
 	private void validateAccount() {
 		if (StringUtils.isBlank(getAccount().getFullName())) {
 			accountedit.recordError("Please enter your full name");
 		}
 		if (StringUtils.isBlank(getAccount().getEmailAddress())) {
 			accountedit.recordError("Email address cannot be empty");
+		} else {
+			// check for duplicate email addresses
+			final Criteria crit = hsm.getSession().createCriteria(Account.class);
+			crit.add(Restrictions.eq("emailAddress", getAccount().getEmailAddress()));
+			if (crit.uniqueResult() != null) {
+				accountedit.recordError("Email address already in use!");
+			}
 		}
 		if (StringUtils.isBlank(getAccount().getAccountName())) {
 			accountedit.recordError("Account name cannot be empty");

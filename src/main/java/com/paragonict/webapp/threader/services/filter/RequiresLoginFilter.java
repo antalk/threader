@@ -2,6 +2,7 @@ package com.paragonict.webapp.threader.services.filter;
 
 import java.io.IOException;
 
+import org.apache.tapestry5.internal.EmptyEventContext;
 import org.apache.tapestry5.runtime.Component;
 import org.apache.tapestry5.services.ComponentEventRequestParameters;
 import org.apache.tapestry5.services.ComponentRequestFilter;
@@ -18,10 +19,10 @@ import com.paragonict.webapp.threader.services.IAccountService;
 public class RequiresLoginFilter implements ComponentRequestFilter {
 
 	
-	private IAccountService _acs;
-	private ComponentSource _cs;
-	private Response _rs;
-	private PageRenderLinkSource _prls;
+	private final IAccountService _acs;
+	private final ComponentSource _cs;
+	private final Response _rs;
+	private final PageRenderLinkSource _prls;
 	
 	public RequiresLoginFilter(IAccountService acs, ComponentSource componentSource,Response response,PageRenderLinkSource prls) {
 		_acs = acs;
@@ -40,19 +41,25 @@ public class RequiresLoginFilter implements ComponentRequestFilter {
 		if (_acs.isLoggedIn()) {
 			handler.handleComponentEvent(parameters);	
 		} else {
-			System.err.println("component id" + parameters.getNestedComponentId());
-			
-			Component comp  = _cs.getComponent(parameters.getActivePageName()+":"+parameters.getNestedComponentId());
-			if (comp != null) {
-				if (! comp.getClass().isAnnotationPresent(RequiresLogin.class)) {
-			    	handler.handleComponentEvent(parameters);
-			    } else {
-			    	_rs.sendError(401, "You are not logged in (anymore). Please reload the application");
-			    }
-			} else {
-				// just continue
-				handler.handleComponentEvent(parameters);
+ 			System.err.println("(not logged) in component " + parameters.getNestedComponentId());
+ 			
+ 			Component comp  = _cs.getComponent(parameters.getActivePageName()+":"+parameters.getNestedComponentId());
+ 			
+ 			while (comp.getComponentResources().getContainer() != null && 
+ 					!comp.getClass().isAnnotationPresent(RequiresLogin.class)) {
+ 				comp = comp.getComponentResources().getContainer();
+ 			}
+ 			if (comp.getClass().isAnnotationPresent(RequiresLogin.class)) {
+					// rewrite the event to 'sessionexpired'
+ 			    	parameters = new ComponentEventRequestParameters(parameters.getActivePageName(), 
+			    			parameters.getContainingPageName(),
+			    			parameters.getNestedComponentId(),
+			    			"sessionexpired", 
+			    			new EmptyEventContext(),
+			    			parameters.getEventContext());
 			}
+			// continue normally
+			handler.handleComponentEvent(parameters);
 		}
 	}
 

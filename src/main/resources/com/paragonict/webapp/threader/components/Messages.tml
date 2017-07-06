@@ -25,42 +25,49 @@
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
-		     	  <t:grid t:id="messageGrid" source="messageSource" include="literal:uid" add="address,date" reorder="uid,address" row="message" zone="messageZone" pagerPosition="bottom" rowsPerPage="5" inplace="true"	class="table table-hover" >  
-				  	<p:uidHeader>
-				  		<span class="glyphicon glyphicon-check" ></span>
-				  	</p:uidHeader>
-				  	<p:addressHeader>
-				  		${headerAddress}
-				  	</p:addressHeader>
-				  	
-				  	<p:uidCell>
-				  		<t:form>
-				  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.id"/>
-				  		</t:form> 
-				  	</p:uidCell>
-				  	<p:addressCell>
-				  		<!--  either from or to address here -->
-				  		${fromortoAddress}<br/>
-				  		<t:if test="isOutGoing">
-					  		<t:tapisser.Modal t:event="composeMessage" t:context="message.uid" large="true">${subject}</t:tapisser.Modal>
-				  			<p:else>
-				  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.id">
-						  			<t:if test="messageRead">
-						  				${subject}
-						  				<p:else>
-						  					<b>${subject}</b>
-						  				</p:else>
-						  			</t:if>
-						  		</t:eventlink>
-				  			</p:else>
-				  		</t:if>
-				  		
-				  	</p:addressCell>
-				  	<p:dateCell>
-				  		${messageDate}
-				  	</p:dateCell>
-				</t:grid>
+		     	<t:if test="isLoggedIn">
+			     	<t:zone t:id="gridzone"> <!--  t:mixins="ZoneRefresh" t:period="5"> -->
+			     	  <t:grid t:id="messageGrid" source="messageSource" include="literal:uid" add="address,date" reorder="uid,address" row="message" zone="gridzone" pagerPosition="bottom" rowsPerPage="20" inplace="true" class="table table-hover" >  
+					  	<p:uidHeader>
+					  		<span class="glyphicon glyphicon-check" ></span>
+					  	</p:uidHeader>
+					  	<p:addressHeader>
+					  		${headerAddress}
+					  	</p:addressHeader>
+					  	
+					  	<p:uidCell>
+					  		<t:form>
+					  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.id"/>
+					  		</t:form> 
+					  	</p:uidCell>
+					  	<p:addressCell>
+					  		<!--  either from or to address here -->
+					  		${fromortoAddress}<br/>
+					  		<t:if test="isOutGoing">
+						  		<t:tapisser.Modal t:event="composeMessage" t:context="message.id" large="true">${subject}</t:tapisser.Modal>
+					  			<p:else>
+					  				<t:eventlink t:event="fetchMessageContent" t:zone="^" t:context="message.id">
+							  			<t:if test="message.messageread">
+							  				${subject}
+							  				<p:else>
+							  					<b>${subject}</b>
+							  				</p:else>
+							  			</t:if>
+							  		</t:eventlink>
+					  			</p:else>
+					  		</t:if>
+					  		
+					  	</p:addressCell>
+					  	<p:dateCell>
+					  		${messageDate}
+					  	</p:dateCell>
+					  </t:grid>
+					 </t:zone>
+				</t:if>
 			</div>
 		</div>
+		
+		<t:zone t:id="nullZone">
+		</t:zone>
 	  </t:block>
 </html>

@@ -56,7 +56,6 @@ public class Layout {
 		}
 	}
 	
-	
 	public String getTitle() {
 		return res.getMessages().get(res.getPage().getClass().getSimpleName()+".title");
 	}

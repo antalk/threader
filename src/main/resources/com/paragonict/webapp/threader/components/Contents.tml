@@ -10,7 +10,7 @@
       </t:if>
       
       <t:block t:id="contentBlock">
-      	<t:if test="message">
+       	<t:if test="message">
       	<div class="panel">
       		<div class="panel-heading bg-primary">
       			<div class="pull-left">
@@ -30,7 +30,7 @@
 		      					<t:tapisser.Modal t:event="forward" large="true">Forward</t:tapisser.Modal>
 		      				</li>
 		      			</ul>
-			  			<t:if test="messageread">
+			  			<t:if test="message.messageread">
 			  				<t:eventlink t:event="markasunread" t:zone="^">
 			  					<button type="button" class="btn btn-default">Mark as unread</button>
 			  				</t:eventlink>
