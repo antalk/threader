@@ -22,25 +22,41 @@
 						</t:eventlink>
 		      		</div>
 		      	</div>
+		      	<div class="pull-right">
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	      				<span class="${sorticon}"/>
+	      			</button>
+	      			<ul class="dropdown-menu dropdown-menu-right" style="top: auto !important; right: 30px !important">
+	      				<li>
+	      					<t:eventlink t:event="updateSorting" t:context="literal:date" class="${getActiveSort('date')}">Date</t:eventlink>
+	      				</li>	
+	      				<li>
+	      					<t:eventlink t:event="updateSorting" t:context="literal:fromAdr" class="${getActiveSort('fromAdr')}">From</t:eventlink>
+	      				</li>
+	      				<li>
+	      					<t:eventlink t:event="updateSorting" t:context="literal:subject" class="${getActiveSort('subject')}">Subject</t:eventlink>
+	      				</li>
+	      			</ul>
+		      	</div>
 		      	<div class="clearfix"/>
 		     </div>
 		     <div class="panel-body">
 		     	<t:if test="isLoggedIn">
-			     	<t:zone t:id="gridzone"> <!--  t:mixins="ZoneRefresh" t:period="5"> -->
-			     	  <t:grid t:id="messageGrid" source="messageSource" include="literal:uid" add="address,date" reorder="uid,address" row="message" zone="gridzone" pagerPosition="bottom" rowsPerPage="20" inplace="true" class="table table-hover" >  
-					  	<p:uidHeader>
+			     	<t:zone t:id="gridzone"> 
+			     	  <t:grid t:id="messageGrid" source="messageSource" include="literal:uid,fromAdr,subject" add="date" reorder="uid,fromAdr,date" row="message" zone="gridzone" pagerPosition="bottom" rowsPerPage="20" inplace="true" overrides="overrides" class="table table-hover" >  
+					  	<p:UIDHeader>
 					  		<span class="glyphicon glyphicon-check" ></span>
-					  	</p:uidHeader>
-					  	<p:addressHeader>
+					  	</p:UIDHeader>
+					  	<p:fromAdrHeader>
 					  		${headerAddress}
-					  	</p:addressHeader>
+					  	</p:fromAdrHeader>
 					  	
-					  	<p:uidCell>
+					  	<p:UIDCell>
 					  		<t:form>
 					  			<t:ck.ajaxcheckbox t:id="msgchecked" t:context="message.id"/>
 					  		</t:form> 
-					  	</p:uidCell>
-					  	<p:addressCell>
+					  	</p:UIDCell>
+					  	<p:fromAdrCell>
 					  		<!--  either from or to address here -->
 					  		${fromortoAddress}<br/>
 					  		<t:if test="isOutGoing">
@@ -57,7 +73,7 @@
 					  			</p:else>
 					  		</t:if>
 					  		
-					  	</p:addressCell>
+					  	</p:fromAdrCell>
 					  	<p:dateCell>
 					  		${messageDate}
 					  	</p:dateCell>
@@ -70,4 +86,6 @@
 		<t:zone t:id="nullZone">
 		</t:zone>
 	  </t:block>
+	  
+	  <t:block t:id="empty"/>
 </html>

@@ -23,7 +23,7 @@
           <ul class="nav navbar-nav">
             <li class="active"><t:pagelink t:page="index">Home</t:pagelink></li>
             
-            <li class="${linkenabled}"><t:pagelink t:page="app/contacts">Contacts</t:pagelink></li>
+            <li class="${linkenabled}"><t:tapisser.Modal t:event="showContacts" large="true">Contacts</t:tapisser.Modal></li>
           </ul>
             <ul class="nav navbar-nav navbar-right">
              <li class="dropdown">

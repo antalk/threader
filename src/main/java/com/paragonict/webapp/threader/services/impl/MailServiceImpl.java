@@ -13,6 +13,7 @@ import javax.mail.UIDFolder;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.mail.util.MimeMessageParser;
+import org.apache.tapestry5.grid.ColumnSort;
 import org.apache.tapestry5.grid.SortConstraint;
 import org.apache.tapestry5.hibernate.HibernateSessionManager;
 import org.apache.tapestry5.hibernate.HibernateSessionSource;
@@ -198,20 +199,29 @@ public class MailServiceImpl implements IMailService {
 			// if for the first time, then ALL messages have to be read. as they are in completely random order...
 			fetcher.isInSync(folder, start, end, mailTotal);
 	        
-			// now query, TODO: ordering and filtering /search can only be done on the COMPLETE set of rows.. not the subset returning
 			// TODO a new session is required... has something todo with the update in the OTHER session (asyncfetcher)
 			final Session s = hss.create();
 			final Criteria criteria = s.createCriteria(LocalMessage.class);
 			criteria.add(Restrictions.eq("folder", folder.toUpperCase()));
 			criteria.add(Restrictions.eq("account", as.getAccountID()));
 			
-			// receiveddate for INBOX
-			// senddate for outbox ?
-			// TODO: fix ordering based on given SortConstraint..
-			criteria.addOrder(Order.desc("receivedDate"));
+			System.err.println("Current sorting: " + sc.getPropertyModel().getPropertyName());
+			// date = either received or sentdate
+			// from = from
+			// subject = subject
+			
+			final String sortColumn = sc.getPropertyModel().getPropertyName().equals("date")?"receivedDate":sc.getPropertyModel().getPropertyName();
+			
+			if (sc.getColumnSort().equals(ColumnSort.ASCENDING)) {
+				criteria.addOrder(Order.asc(sortColumn));
+			} else {
+				// DESC or UNSORTED
+				criteria.addOrder(Order.desc(sortColumn));
+			}
 			
 			//criteria.setFirstResult(start).setMaxResults((end+1)-start);
 			try {
+				// TODO still some optimization possible with setMaxResults..?
 				return criteria.list().subList(start, end+1);
 			} finally {
 				s.close();

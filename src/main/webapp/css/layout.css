@@ -62,3 +62,11 @@ th .check {
 DIV.t-tree-container LI {
 	white-space: nowrap;
 }
+
+/* my custom css*/
+
+/* dont render subject column /header class in grid component */
+
+.subject {
+	display: none;
+}

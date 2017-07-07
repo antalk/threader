@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:t="http://tapestry.apache.org/schema/tapestry_5_3.xsd"
+	xmlns:p="tapestry:parameter">
+
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">
+			<span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+		</button>
+		<h4 class="modal-title">Manage Contacts</h4>
+	</div>
+	<div class="modal-body">
+		<t:zone t:id="contactszone" id="contactszone" update="none">
+			<t:tapisser.Datatable source="contacts"
+				searchColumns="name,mailAddress" add="action" row="contact"
+				rowType="rowType">
+				<p:actionCell>
+					<t:eventlink t:event="delete" t:mixins="tapisser/Confirm"
+						t:context="contact.id" t:zone="^">
+						<span class="glyphicon glyphicon-remove"></span>
+					</t:eventlink>
+				</p:actionCell>
+			</t:tapisser.Datatable>
+		</t:zone>
+	</div>
+</html>

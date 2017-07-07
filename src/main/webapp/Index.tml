@@ -80,6 +80,11 @@
 	<t:MailComposer />
 </t:block>
 
+<t:block t:id="contactsBlock">
+	<t:Contacts />
+</t:block>
+
+
 <t:block t:id="ajaxLoader">
 	<div class="well">
 		<img src="images/loader.gif" />Loading...

@@ -58,7 +58,7 @@ public class Index extends AuthenticatedPage {
 			//am.error("An communication error occured: ["+ cause.getMessage()+"]. Please retry or re-configure your email account");
 			//return getPrls().createPageRenderLink(Index.class);
 		}
-		return null;
+		return null; // pass exception to RequestExceptionHandler.
 	}
 	
 	@OnEvent(component="loginform",value=EventConstants.SUBMIT)
@@ -123,6 +123,10 @@ public class Index extends AuthenticatedPage {
 		return getResources().getBlock("composeBlock");
 	}
 
+	@OnEvent(value="showContacts")
+	private Block getContactsModal() {
+		return getResources().getBlock("contactsBlock");
+	}
 	
 	@OnEvent(value="getMessageContent")
 	private Block getMessageContents(final Long id) {

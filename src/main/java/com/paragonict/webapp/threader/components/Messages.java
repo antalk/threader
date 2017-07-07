@@ -12,6 +12,7 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.tapestry5.Block;
 import org.apache.tapestry5.ComponentEventCallback;
 import org.apache.tapestry5.EventConstants;
+import org.apache.tapestry5.PropertyOverrides;
 import org.apache.tapestry5.annotations.Cached;
 import org.apache.tapestry5.annotations.Component;
 import org.apache.tapestry5.annotations.Import;
@@ -87,8 +88,6 @@ public class Messages extends BaseComponent {
 				messageGrid.reset();
 				lastFolderSelected = sso.getStringValue(SESSION_ATTRS.SELECTED_FOLDER);
 			}
-			
-			
 			// sorting by default on sentDate, can be from and subject...		
 			if (messageGrid.getSortModel().getSortConstraints().isEmpty()) {
 				while (messageGrid.getSortModel().getColumnSort("date").compareTo(ColumnSort.DESCENDING) !=0) {
@@ -198,6 +197,14 @@ public class Messages extends BaseComponent {
 		}
 	}
 	
+	public String getActiveSort(final String field) {
+		return field.equals(messageGrid.getSortModel().getSortConstraints().get(0).getPropertyModel().getPropertyName())?"bg-success":"";
+	}
+	
+	public String getSortIcon() {
+		return messageGrid.getSortModel().getSortConstraints().get(0).getColumnSort().equals(ColumnSort.ASCENDING)?"glyphicon glyphicon-sort-by-attributes":"glyphicon glyphicon-sort-by-attributes-alt";
+	}
+	
 	public String getMessageDate() throws MessagingException {
 		final Date calcDate = getIsOutGoing()?message.getSentDate():message.getReceivedDate();
 		
@@ -229,6 +236,44 @@ public class Messages extends BaseComponent {
 			})) {
 			arr.addRender("contentZone", holder.get());
 		} 
+	}
+	
+	/*
+	 * Update sort constraints
+	 * 
+	 */
+	@OnEvent(value="updateSorting")
+	private void updateSort(String columnName) {
+		try {
+			messageGrid.getSortModel().updateSort(columnName);
+		} catch (Exception e) {
+			getLogger().error("Could not update sorting due to {}" , e.getMessage());
+			if (getLogger().isDebugEnabled()) {
+				e.printStackTrace();
+			}
+			messageGrid.reset();
+		}
+	}
+	
+	public PropertyOverrides getOverrides() {
+		return new MessageGridOverrides();
+	}
+	
+	private class MessageGridOverrides implements PropertyOverrides {
+		
+		@Override
+		public org.apache.tapestry5.ioc.Messages getOverrideMessages() {
+			return getResources().getMessages();
+		}
+
+		@Override
+		public Block getOverrideBlock(String name) {
+			if (name.toLowerCase().contains("subject")) {
+				return getResources().getBlock("empty");
+			}
+			// get to the resources of the grid component..
+			return getResources().getEmbeddedComponent("messageGrid").getComponentResources().getBlockParameter(name);
+		}
 	}
 	
 	/*

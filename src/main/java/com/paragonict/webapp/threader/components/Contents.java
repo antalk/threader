@@ -23,6 +23,7 @@ import com.paragonict.webapp.threader.annotation.RequiresLogin;
 import com.paragonict.webapp.threader.base.BaseComponent;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject;
 import com.paragonict.webapp.threader.beans.sso.SessionStateObject.SESSION_ATTRS;
+import com.paragonict.webapp.threader.entities.DraftContent;
 import com.paragonict.webapp.threader.entities.LocalMessage;
 import com.paragonict.webapp.threader.services.IMailService;
 
@@ -143,24 +144,36 @@ public class Contents extends BaseComponent {
 		return createComposePopup(newMessage);
 	}
 
-	
 	private Block createComposePopup(final LocalMessage newMessage) throws MessagingException {
 		
-		String newUID  =  UUID.randomUUID().toString();
-		newMessage.setUID(newUID);
+		newMessage.setUID(null);
 		newMessage.setAccount(getAccountService().getAccount().getId());
 		newMessage.setFromAdr(getAccountService().getAccount().getEmailAddress());
 		
 		newMessage.setSubject(getResources().getMessages().get("reply.prefix") + getMessage().getSubject());
 		newMessage.setFolder("DRAFTS");
 		
+		
 		hsm.getSession().saveOrUpdate(newMessage);
+		
+		// moet je ook niet de content meenemen >???
+				DraftContent dc = new DraftContent();
+				dc.setLocalMessage(newMessage);
+				try {
+					dc.setContent(ms.getMessageContent(getMessage()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				hsm.getSession().persist(dc);
+		
+		
 		hsm.commit();
 		//trigger compose event, and handle response.
 		
 		final Holder<Block> holder = new Holder<Block>();
 		
-		if (getResources().triggerEvent("composeMessage", new Object[] {newUID}, new ComponentEventCallback<Block>() {
+		if (getResources().triggerEvent("composeMessage", new Object[] {newMessage.getId()}, new ComponentEventCallback<Block>() {
 
 			public boolean handleResult(Block result) {
 				holder.put(result);
